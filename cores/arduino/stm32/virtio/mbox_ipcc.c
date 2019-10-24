@@ -52,16 +52,8 @@
 #define RX_BUF_FREE         2
 
 /* Private variables ---------------------------------------------------------*/
-extern IPCC_HandleTypeDef hipcc;
-int msg_received_ch1 = RX_NO_MSG;
-int msg_received_ch2 = RX_NO_MSG;
-uint32_t vring0_id = 0; /* used for channel 1 */
-uint32_t vring1_id = 1; /* used for channel 2 */
-
-
-
-
 IPCC_HandleTypeDef hipcc;
+extern struct rpmsg_virtio_device rvdev;
 
 
 
@@ -69,7 +61,6 @@ IPCC_HandleTypeDef hipcc;
 /* Private function prototypes -----------------------------------------------*/
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc, uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir);
 void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc, uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir);
-
 
 /**
   * @brief  Initialize MAILBOX with IPCC peripheral
@@ -102,36 +93,6 @@ int MAILBOX_Init(void)
 }
 
 /**
-  * @brief  Initialize MAILBOX with IPCC peripheral
-  * @param  virtio device
-  * @retval : Operation result
-  */
-int MAILBOX_Poll(struct virtio_device *vdev)
-{
-  /* If we got an interrupt, ask for the corresponding virtqueue processing */
-
-  if (msg_received_ch1 == RX_BUF_FREE) {
-    OPENAMP_log_dbg("Running virt0 (ch_1 buf free)\r\n");
-    rproc_virtio_notified(vdev, VRING0_ID);
-    msg_received_ch1 = RX_NO_MSG;
-    return 0;
-  }
-
-  if (msg_received_ch2 == RX_NEW_MSG) {
-    OPENAMP_log_dbg("Running virt1 (ch_2 new msg)\r\n");
-    rproc_virtio_notified(vdev, VRING1_ID);
-    msg_received_ch2 = RX_NO_MSG;
-
-    /* The OpenAMP framework does not notify for free buf: do it here */
-    rproc_virtio_notified(NULL, VRING1_ID);
-    return 0;
-  }
-
-  return -1;
-}
-
-
-/**
   * @brief  Callback function called by OpenAMP MW to notify message processing
   * @param  VRING id
   * @retval Operation result
@@ -149,6 +110,7 @@ int MAILBOX_Notify(void *priv, uint32_t id)
     /* Note: the OpenAMP framework never notifies this */
     channel = IPCC_CHANNEL_2;
     OPENAMP_log_dbg("Send 'buff free' on ch_2\r\n");
+    return -1;
   } else {
     OPENAMP_log_err("invalid vring (%d)\r\n", (int)id);
     return -1;
@@ -167,35 +129,38 @@ int MAILBOX_Notify(void *priv, uint32_t id)
   return 0;
 }
 
+/**
+  * @brief  Notify Rx buffer is free to Master
+  */
+void MAILBOX_Notify_Rx_Buf_Free()
+{
+  HAL_IPCC_NotifyCPU(&hipcc, IPCC_CHANNEL_2, IPCC_CHANNEL_DIR_RX);
+}
+
 /* Private function  ---------------------------------------------------------*/
 /* Callback from IPCC Interrupt Handler: Master Processor informs that there are some free buffers */
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
-  if (msg_received_ch1 != RX_NO_MSG) {
-    OPENAMP_log_dbg("IPCC_channel1_callback: previous IRQ not treated (status = %d)\r\n", msg_received_ch1);
-  }
-
-  msg_received_ch1 = RX_BUF_FREE;
-
   /* Inform A7 that we have received the 'buff free' msg */
   OPENAMP_log_dbg("Ack 'buff free' message on ch1\r\n");
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
+  rproc_virtio_notified(rvdev.vdev, VRING0_ID);
 }
 
 /* Callback from IPCC Interrupt Handler: new message received from Master Processor */
 void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
-  if (msg_received_ch2 != RX_NO_MSG) {
-    OPENAMP_log_dbg("IPCC_channel2_callback: previous IRQ not treated (status = %d)\r\n", msg_received_ch2);
-  }
-
-  msg_received_ch2 = RX_NEW_MSG;
-
-  /* Inform A7 that we have received the new msg */
-  OPENAMP_log_dbg("Ack new message on ch2\r\n");
-  HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
+  (void) hipcc;
+  (void) ChannelIndex;
+  (void) ChannelDir;
+  /* Don't inform A7 here, do it when the buffer has more than RPMSG_BUFFER_SIZE.
+   * See MAILBOX_Notify_Rx_Buf_Free() and VirIOSerial.cpp.
+   */
+  rproc_virtio_notified(rvdev.vdev, VRING1_ID);
+  /* The OpenAMP framework does not notify for free buf: do it here */
+  rproc_virtio_notified(NULL, VRING1_ID);
 }
 
 /**
