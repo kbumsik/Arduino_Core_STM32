@@ -62,5 +62,10 @@ void serialEventRun(void)
     serialEventUSB();
   }
 #endif
+#if defined(HAVE_SERIALVIRTIO)
+  if (serialEventVirtIO && SerialVirtIO.available()) {
+    serialEventVirtIO();
+  }
+#endif
 }
 

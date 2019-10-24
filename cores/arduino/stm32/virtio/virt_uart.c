@@ -5,7 +5,7 @@
 
 /* Configurable parameters */
 #ifndef RPMSG_BUFFER_SIZE
-#define RPMSG_BUFFER_SIZE	(512)
+#define RPMSG_BUFFER_SIZE (512)
 #endif
 
 #include "virtual_driver/virt_uart.c"

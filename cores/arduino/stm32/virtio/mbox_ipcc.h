@@ -40,7 +40,7 @@
 /* Exported functions ------------------------------------------------------- */
 int MAILBOX_Init(void);
 int MAILBOX_Notify(void *priv, uint32_t id);
-int MAILBOX_Poll(struct virtio_device *vdev);
+void MAILBOX_Notify_Rx_Buf_Free(void);
 
 /* USER CODE BEGIN lastSection */
 /* can be used to modify / undefine previous code or add new definitions */

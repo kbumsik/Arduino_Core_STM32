@@ -33,7 +33,7 @@ static struct metal_io_region *shm_io;
 static struct metal_io_region *rsc_io;
 static struct shared_resource_table *rsc_table;
 static struct rpmsg_virtio_shm_pool shpool;
-static struct rpmsg_virtio_device rvdev;
+struct rpmsg_virtio_device rvdev;
 
 
 static metal_phys_addr_t shm_physmap;
@@ -97,7 +97,7 @@ static int OPENAMP_shmem_init(int RPMsgRole)
   return 0;
 }
 
-int OPENAMP_Init(int RPMsgRole, rpmsg_ns_bind_cb ns_bind_cb)
+int OPENAMP_Init(rpmsg_ns_bind_cb ns_bind_cb)
 {
   struct fw_rsc_vdev_vring *vring_rsc;
   struct virtio_device *vdev;
@@ -106,12 +106,12 @@ int OPENAMP_Init(int RPMsgRole, rpmsg_ns_bind_cb ns_bind_cb)
   MAILBOX_Init();
 
   /* Libmetal Initilalization */
-  status = OPENAMP_shmem_init(RPMsgRole);
+  status = OPENAMP_shmem_init(RPMSG_REMOTE);
   if (status) {
     return status;
   }
 
-  vdev = rproc_virtio_create_vdev(RPMsgRole, VDEV_ID, &rsc_table->vdev,
+  vdev = rproc_virtio_create_vdev(RPMSG_REMOTE, VDEV_ID, &rsc_table->vdev,
                                   rsc_io, NULL, MAILBOX_Notify, NULL);
   if (vdev == NULL) {
     return -1;
@@ -160,16 +160,9 @@ int OPENAMP_create_endpoint(struct rpmsg_endpoint *ept, const char *name,
                           unbind_cb);
 }
 
-void OPENAMP_check_for_message(void)
-{
-  MAILBOX_Poll(rvdev.vdev);
-}
-
 void OPENAMP_Wait_EndPointready(struct rpmsg_endpoint *rp_ept)
 {
-  while (!is_rpmsg_ept_ready(rp_ept)) {
-    MAILBOX_Poll(rvdev.vdev);
-  }
+  while (!is_rpmsg_ept_ready(rp_ept));
 }
 
 #endif /* VIRTIOCON */
