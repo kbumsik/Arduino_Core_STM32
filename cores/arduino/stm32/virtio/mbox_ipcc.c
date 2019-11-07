@@ -32,6 +32,7 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
+#include "virtio_config.h"
 #include "openamp/open_amp.h"
 #include "stm32_def.h"
 #include "openamp_conf.h"
