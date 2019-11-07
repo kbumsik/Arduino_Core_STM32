@@ -23,6 +23,8 @@
 
 #ifdef VIRTIOCON
 
+#include "virtio_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

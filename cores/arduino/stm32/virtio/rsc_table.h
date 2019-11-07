@@ -17,6 +17,7 @@
 
 #ifdef VIRTIOCON
 
+#include "virtio_config.h"
 #include "openamp/open_amp.h"
 #include "openamp_conf.h"
 

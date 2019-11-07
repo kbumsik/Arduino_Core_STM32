@@ -30,10 +30,6 @@
 extern "C" {
 #endif
 
-#ifndef RPMSG_BUFFER_SIZE
-#error "Define RPMSG_BUFFER_SIZE, or include relevant headers."
-#endif
-
 #define VIRTIO_RINGBUFFER_SIZE (RPMSG_BUFFER_SIZE * 2)
 
 typedef struct {

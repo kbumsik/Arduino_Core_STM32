@@ -22,6 +22,7 @@
  */
 #ifdef VIRTIOCON
 
+#include "virtio_config.h"
 #include "ringbuffer.h"
 #include <string.h>
 #include "wiring.h"
