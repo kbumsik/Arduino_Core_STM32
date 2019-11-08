@@ -98,7 +98,7 @@ static int OPENAMP_shmem_init(int RPMsgRole)
   return 0;
 }
 
-int OPENAMP_Init(rpmsg_ns_bind_cb ns_bind_cb)
+int OPENAMP_Init()
 {
   struct fw_rsc_vdev_vring *vring_rsc;
   struct virtio_device *vdev;
@@ -136,7 +136,7 @@ int OPENAMP_Init(rpmsg_ns_bind_cb ns_bind_cb)
 
   rpmsg_virtio_init_shm_pool(&shpool, (void *)VRING_BUFF_ADDRESS,
                              (size_t)SHM_SIZE);
-  rpmsg_init_vdev(&rvdev, vdev, ns_bind_cb, shm_io, &shpool);
+  rpmsg_init_vdev(&rvdev, vdev, NULL, shm_io, &shpool);
 
   return 0;
 }
