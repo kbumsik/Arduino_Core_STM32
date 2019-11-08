@@ -35,7 +35,7 @@ extern "C" {
 #define OPENAMP_destroy_ept rpmsg_destroy_ept
 
 /* Initialize the openamp framework*/
-int OPENAMP_Init(rpmsg_ns_bind_cb ns_bind_cb);
+int OPENAMP_Init(void);
 
 /* Deinitialize the openamp framework*/
 void OPENAMP_DeInit(void);

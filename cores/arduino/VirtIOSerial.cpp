@@ -43,7 +43,7 @@ void VirtIOSerial::begin(void)
   if (initialized) {
     return;
   }
-  OPENAMP_Init(NULL);
+  OPENAMP_Init();
   if (VIRT_UART_Init(&huart) != VIRT_UART_OK) {
     // log_err("VIRT_UART_Init UART0 failed.\r\n");
     Error_Handler();
