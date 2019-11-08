@@ -21,13 +21,13 @@
 
 /*
  * Channel direction and usage:
- *
+ * virtio_rpmsg_bus.c                                       rpmsg_virtio.c
  *  ========   <-- new msg ---=============--------<------   =======
- * ||      ||                || CHANNEL 1 ||                ||     ||
+ * ||      || rvq (rx)       || CHANNEL 1 ||    svq (tx_vq) ||     ||
  * ||  A7  ||  ------->-------=============--- buf free-->  || M4  ||
  * ||      ||                                               ||     ||
  * ||master||  <-- buf free---=============--------<------  ||slave||
- * ||      ||                || CHANNEL 2 ||                ||     ||
+ * ||      || svq (tx)       || CHANNEL 2 ||    rvq (rx_vq) ||     ||
  *  ========   ------->-------=============----new msg -->   =======
  */
 
