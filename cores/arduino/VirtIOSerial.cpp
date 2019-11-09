@@ -33,6 +33,7 @@ void serialEventVirtIO() __attribute__((weak));
 
 static VIRT_UART_HandleTypeDef huart;
 static bool initialized = false;
+static bool first_message_discarded = false;
 static ringbuffer_t ring;
 
 void rxCallback(VIRT_UART_HandleTypeDef *huart);
@@ -53,6 +54,7 @@ void VirtIOSerial::begin(void)
     Error_Handler();
   }
   initialized = true;
+  first_message_discarded = false;
 }
 
 void VirtIOSerial::begin(uint32_t /* baud_count */)
@@ -150,6 +152,15 @@ void VirtIOSerial::flush(void)
 void rxCallback(VIRT_UART_HandleTypeDef *huart)
 {
   log_info("Msg received on VIRTUAL UART0 channel:  %s \n\r", (char *) huart->pRxBuffPtr);
+  // Linux host must send a dummy data first to finish initialization of rpmsg
+  // on the coprocessor side. This message should be discarded.
+  // run_arduino_gen.sh script will send dummy data: "DUMMY".
+  // See: https://github.com/OpenAMP/open-amp/issues/182
+  // See: run_arduino_gen.sh
+  if (!first_message_discarded) {
+    huart->RxXferSize = 0;
+    first_message_discarded = true;
+  }
 
   /* copy received msg in a variable to sent it back to master processor in main infinite loop*/
   size_t size = min(huart->RxXferSize, ringbuffer_write_available(&ring));
