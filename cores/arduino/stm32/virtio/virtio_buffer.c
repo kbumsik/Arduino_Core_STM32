@@ -23,24 +23,24 @@
 #ifdef VIRTIOCON
 
 #include "virtio_config.h"
-#include "ringbuffer.h"
+#include "virtio_buffer.h"
 #include <string.h>
 #include "wiring.h"
 
-#define BUFFER_END (VIRTIO_RINGBUFFER_SIZE - 1)
+#define BUFFER_END (VIRTIO_BUFFER_SIZE - 1)
 
-static uint16_t read_tmp(ringbuffer_t *ring, uint8_t *dst, uint16_t size);
-static void read_commit(ringbuffer_t *ring);
-static void read_rollback(ringbuffer_t *ring);
+static uint16_t read_tmp(virtio_buffer_t *ring, uint8_t *dst, uint16_t size);
+static void read_commit(virtio_buffer_t *ring);
+static void read_rollback(virtio_buffer_t *ring);
 
-void ringbuffer_init(ringbuffer_t *ring)
+void virtio_buffer_init(virtio_buffer_t *ring)
 {
   ring->write = 0;
   ring->read = 0;
   ring->read_tmp = 0;
 }
 
-uint16_t ringbuffer_read_available(ringbuffer_t *ring)
+uint16_t virtio_buffer_read_available(virtio_buffer_t *ring)
 {
   // This will make the function safe when write openrations are done in interrupts
   volatile uint16_t write = ring->write;
@@ -51,7 +51,7 @@ uint16_t ringbuffer_read_available(ringbuffer_t *ring)
   return write - ring->read;
 }
 
-static uint16_t read_tmp(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
+static uint16_t read_tmp(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 {
   // This will make the function safe when write openrations are done in interrupts
   volatile uint16_t write = ring->write;
@@ -66,17 +66,17 @@ static uint16_t read_tmp(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
   return size;
 }
 
-static void read_commit(ringbuffer_t *ring)
+static void read_commit(virtio_buffer_t *ring)
 {
   ring->read = ring->read_tmp;
 }
 
-static void read_rollback(ringbuffer_t *ring)
+static void read_rollback(virtio_buffer_t *ring)
 {
   ring->read_tmp = ring->read;
 }
 
-uint16_t ringbuffer_read(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
+uint16_t virtio_buffer_read(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 {
   uint16_t recv_size = read_tmp(ring, dst, size);
   read_commit(ring);
@@ -84,11 +84,11 @@ uint16_t ringbuffer_read(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
 }
 
 /**
- * WARNING: The size of read cannot be larger than ringbuffer_read_available().
+ * WARNING: The size of read cannot be larger than virtio_buffer_read_available().
  */
-uint16_t ringbuffer_peek(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
+uint16_t virtio_buffer_peek(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 {
-  size = min(size, ringbuffer_read_available(ring));
+  size = min(size, virtio_buffer_read_available(ring));
   uint16_t recv_size = 0;
   while (recv_size < size) {
     recv_size += read_tmp(ring, dst + recv_size, size - recv_size);
@@ -97,7 +97,7 @@ uint16_t ringbuffer_peek(ringbuffer_t *ring, uint8_t *dst, uint16_t size)
   return recv_size;
 }
 
-uint16_t ringbuffer_write_available(ringbuffer_t *ring)
+uint16_t virtio_buffer_write_available(virtio_buffer_t *ring)
 {
   // This will make the function safe when read openrations are done in interrupts
   volatile uint16_t read = ring->read;
@@ -108,7 +108,7 @@ uint16_t ringbuffer_write_available(ringbuffer_t *ring)
   return read + (BUFFER_END - ring->write);
 }
 
-uint16_t ringbuffer_write(ringbuffer_t *ring, uint8_t *src, uint16_t size)
+uint16_t virtio_buffer_write(virtio_buffer_t *ring, uint8_t *src, uint16_t size)
 {
   // This will make the function safe when read openrations are done in a interrupt
   volatile uint16_t read = ring->read;

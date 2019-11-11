@@ -26,7 +26,7 @@
 #include "openamp.h"
 #include "openamp_log.h"
 #include "wiring.h"
-#include "ringbuffer.h"
+#include "virtio_buffer.h"
 
 VirtIOSerial SerialVirtIO;
 void serialEventVirtIO() __attribute__((weak));
@@ -34,13 +34,13 @@ void serialEventVirtIO() __attribute__((weak));
 static VIRT_UART_HandleTypeDef huart;
 static bool initialized = false;
 static bool first_message_discarded = false;
-static ringbuffer_t ring;
+static virtio_buffer_t ring;
 
 void rxCallback(VIRT_UART_HandleTypeDef *huart);
 
 void VirtIOSerial::begin(void)
 {
-  ringbuffer_init(&ring);
+  virtio_buffer_init(&ring);
   if (initialized) {
     return;
   }
@@ -72,13 +72,13 @@ void VirtIOSerial::begin(uint32_t /* baud_count */, uint8_t /* config */)
 void VirtIOSerial::end()
 {
   OPENAMP_DeInit();
-  ringbuffer_init(&ring);
+  virtio_buffer_init(&ring);
   initialized = false;
 }
 
 int VirtIOSerial::available(void)
 {
-  return ringbuffer_read_available(&ring);
+  return virtio_buffer_read_available(&ring);
 }
 
 int VirtIOSerial::availableForWrite()
@@ -90,9 +90,9 @@ int VirtIOSerial::availableForWrite()
 
 int VirtIOSerial::peek(void)
 {
-  if (ringbuffer_read_available(&ring) > 0) {
+  if (virtio_buffer_read_available(&ring) > 0) {
     uint8_t tmp;
-    ringbuffer_peek(&ring, &tmp, 1);
+    virtio_buffer_peek(&ring, &tmp, 1);
     return tmp;
   } else {
     return -1;
@@ -115,10 +115,10 @@ size_t VirtIOSerial::readBytes(char *buffer, size_t length)
   const size_t size = length;
   _startMillis = millis();
   while (length > 0 && (millis() - _startMillis < _timeout)) {
-    uint16_t prev_write_available = ringbuffer_write_available(&ring);
-    length -= ringbuffer_read(&ring, reinterpret_cast<uint8_t *>(buffer), length);
+    uint16_t prev_write_available = virtio_buffer_write_available(&ring);
+    length -= virtio_buffer_read(&ring, reinterpret_cast<uint8_t *>(buffer), length);
     if (prev_write_available < RPMSG_BUFFER_SIZE
-        && ringbuffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
+        && virtio_buffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
       MAILBOX_Notify_Rx_Buf_Free();
     }
   }
@@ -163,11 +163,11 @@ void rxCallback(VIRT_UART_HandleTypeDef *huart)
   }
 
   /* copy received msg in a variable to sent it back to master processor in main infinite loop*/
-  size_t size = min(huart->RxXferSize, ringbuffer_write_available(&ring));
+  size_t size = min(huart->RxXferSize, virtio_buffer_write_available(&ring));
   while (size > 0) {
-    size -= ringbuffer_write(&ring, huart->pRxBuffPtr, size);
+    size -= virtio_buffer_write(&ring, huart->pRxBuffPtr, size);
   }
-  if (ringbuffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
+  if (virtio_buffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
     MAILBOX_Notify_Rx_Buf_Free();
   }
 }
