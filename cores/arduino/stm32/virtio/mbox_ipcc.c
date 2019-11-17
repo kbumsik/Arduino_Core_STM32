@@ -144,7 +144,6 @@ void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
   /* Inform A7 that we have received the 'buff free' msg */
-  OPENAMP_log_dbg("Ack 'buff free' message on ch1\r\n");
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
   rproc_virtio_notified(rvdev.vdev, VRING0_ID);
 }
@@ -170,7 +169,6 @@ void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
 void IPCC_RX1_IRQHandler(void)
 {
   /* USER CODE BEGIN IPCC_RX1_IRQn 0 */
-  log_dbg("%s: IT RX1\r\n", __func__);
   /* USER CODE END IPCC_RX1_IRQn 0 */
   HAL_IPCC_RX_IRQHandler(&hipcc);
   /* USER CODE BEGIN IPCC_RX1_IRQn 1 */
