@@ -151,7 +151,6 @@ void VirtIOSerial::flush(void)
 /* USER CODE BEGIN 4 */
 void rxCallback(VIRT_UART_HandleTypeDef *huart)
 {
-  log_info("Msg received on VIRTUAL UART0 channel:  %s \n\r", (char *) huart->pRxBuffPtr);
   // Linux host must send a dummy data first to finish initialization of rpmsg
   // on the coprocessor side. This message should be discarded.
   // run_arduino_gen.sh script will send dummy data: "DUMMY".
