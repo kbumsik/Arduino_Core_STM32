@@ -44,9 +44,10 @@ void VirtIOSerial::begin(void)
   if (initialized) {
     return;
   }
-  OPENAMP_Init();
-  if (VIRT_UART_Init(&huart) != VIRT_UART_OK) {
-    // log_err("VIRT_UART_Init UART0 failed.\r\n");
+  if (OPENAMP_Init() != 0) {
+    Error_Handler();
+  }
+  if (VIRT_UART_Init(&virt_huart) != VIRT_UART_OK) {
     Error_Handler();
   }
   /*Need to register callback for message reception by channels*/
@@ -136,6 +137,7 @@ size_t VirtIOSerial::write(uint8_t ch)
 size_t VirtIOSerial::write(const uint8_t *buffer, size_t size)
 {
   if (VIRT_UART_Transmit(&huart, const_cast<uint8_t *>(buffer), size) == VIRT_UART_ERROR) {
+    // This error usually happens when rpmsg is not ready for
     return 0;
   }
   return size;

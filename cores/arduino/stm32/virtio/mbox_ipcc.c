@@ -80,13 +80,13 @@ int MAILBOX_Init(void)
 
   if (HAL_IPCC_ActivateNotification(&hipcc, IPCC_CHANNEL_1, IPCC_CHANNEL_DIR_RX,
                                     IPCC_channel1_callback) != HAL_OK) {
-    OPENAMP_log_err("%s: ch_1 RX fail\n", __func__);
+    Error_Handler();
     return -1;
   }
 
   if (HAL_IPCC_ActivateNotification(&hipcc, IPCC_CHANNEL_2, IPCC_CHANNEL_DIR_RX,
                                     IPCC_channel2_callback) != HAL_OK) {
-    OPENAMP_log_err("%s: ch_2 RX fail\n", __func__);
+    Error_Handler();
     return -1;
   }
 
@@ -106,27 +106,23 @@ int MAILBOX_Notify(void *priv, uint32_t id)
   /* Called after virtqueue processing: time to inform the remote */
   if (id == VRING0_ID) {
     channel = IPCC_CHANNEL_1;
-    OPENAMP_log_dbg("Send msg on ch_1\r\n");
   } else if (id == VRING1_ID) {
     /* Note: the OpenAMP framework never notifies this */
     channel = IPCC_CHANNEL_2;
-    OPENAMP_log_dbg("Send 'buff free' on ch_2\r\n");
     return -1;
   } else {
-    OPENAMP_log_err("invalid vring (%d)\r\n", (int)id);
     return -1;
   }
 
   /* Check that the channel is free (otherwise wait until it is) */
   if (HAL_IPCC_GetChannelStatus(&hipcc, channel, IPCC_CHANNEL_DIR_TX) == IPCC_CHANNEL_STATUS_OCCUPIED) {
-    OPENAMP_log_dbg("Waiting for channel to be freed\r\n");
+    // Wait for channel to be freed
     while (HAL_IPCC_GetChannelStatus(&hipcc, channel, IPCC_CHANNEL_DIR_TX) == IPCC_CHANNEL_STATUS_OCCUPIED)
       ;
   }
 
   /* Inform A7 (either new message, or buf free) */
   HAL_IPCC_NotifyCPU(&hipcc, channel, IPCC_CHANNEL_DIR_TX);
-
   return 0;
 }
 
