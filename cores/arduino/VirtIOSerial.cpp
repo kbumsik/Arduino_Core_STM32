@@ -47,7 +47,7 @@ void VirtIOSerial::begin(void)
   if (OPENAMP_Init() != 0) {
     Error_Handler();
   }
-  if (VIRT_UART_Init(&virt_huart) != VIRT_UART_OK) {
+  if (VIRT_UART_Init(&huart) != VIRT_UART_OK) {
     Error_Handler();
   }
   /*Need to register callback for message reception by channels*/
