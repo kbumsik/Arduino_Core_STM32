@@ -28,7 +28,7 @@
 #include "Stream.h"
 
 //================================================================================
-// Serial over CDC
+// Serial over OpenAmp
 class VirtIOSerial : public Stream {
   public:
     void begin(void);

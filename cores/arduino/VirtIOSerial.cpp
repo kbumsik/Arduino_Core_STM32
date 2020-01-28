@@ -50,7 +50,7 @@ void VirtIOSerial::begin(void)
   if (VIRT_UART_Init(&huart) != VIRT_UART_OK) {
     Error_Handler();
   }
-  /*Need to register callback for message reception by channels*/
+  /* Need to register callback for message reception by channels */
   if (VIRT_UART_RegisterCallback(&huart, VIRT_UART_RXCPLT_CB_ID, rxCallback) != VIRT_UART_OK) {
     Error_Handler();
   }
@@ -60,13 +60,13 @@ void VirtIOSerial::begin(void)
 
 void VirtIOSerial::begin(uint32_t /* baud_count */)
 {
-  // uart config is ignored in USB-CDC
+  // uart config is ignored in OpenAmp
   begin();
 }
 
 void VirtIOSerial::begin(uint32_t /* baud_count */, uint8_t /* config */)
 {
-  // uart config is ignored in USB-CDC
+  // uart config is ignored in OpenAmp
   begin();
 }
 
@@ -150,7 +150,6 @@ void VirtIOSerial::flush(void)
   return;
 }
 
-/* USER CODE BEGIN 4 */
 void rxCallback(VIRT_UART_HandleTypeDef *huart)
 {
   // Linux host must send a dummy data first to finish initialization of rpmsg
