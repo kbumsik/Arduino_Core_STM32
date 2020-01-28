@@ -36,7 +36,9 @@ After Verify and Upload, you will see a message similar to the following in Ardu
 
 * Linux/macOS:
 
-  `/tmp/arduino_build_668148/run_arduino_Blink.sh`
+    Usage: sh run_arduino.sh [start|stop|restart]
+           sh run_arduino.sh [install|uninstall]
+           sh run_arduino.sh [monitor|send-msg|send-file|minicom]
 
 In this example, the user **must** upload `<Arduino build output path>/run_arduino_<sketch name>.sh` file manually. Uploading instruction is described later in the [Uploading](#Uploading) section. 
 
@@ -62,6 +64,18 @@ After uploading the user can use `sh run_arduino_<sketch name>.sh start` in the 
 
     sh run_arduino_<sketch name>.sh uninstall
         Uninstall the autostart service.
+
+    sh run_arduino_<sketch name>.sh monitor
+        Monitor data received from the coprocessor via the virtual serial.
+
+    sh run_arduino_<sketch name>.sh send-msg <message...>
+        Send a message to the coprocessor via the virtual serial.
+
+    sh run_arduino_<sketch name>.sh send-file <filename>
+        Send a file content to the coprocessor via the virtual serial.
+
+    sh run_arduino_<sketch name>.sh minicom
+        Launch minicom interactive serial communication program.
 
     sh run_arduino_<sketch name>.sh stop
         Stop the coprocessor.
