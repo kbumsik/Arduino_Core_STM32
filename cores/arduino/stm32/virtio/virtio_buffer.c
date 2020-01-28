@@ -42,7 +42,7 @@ void virtio_buffer_init(virtio_buffer_t *ring)
 
 uint16_t virtio_buffer_read_available(virtio_buffer_t *ring)
 {
-  // This will make the function safe when write openrations are done in interrupts
+  // This will make the function safe when write operations are done in interrupts
   volatile uint16_t write = ring->write;
 
   if (write < ring->read) {
@@ -53,7 +53,7 @@ uint16_t virtio_buffer_read_available(virtio_buffer_t *ring)
 
 static uint16_t read_tmp(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 {
-  // This will make the function safe when write openrations are done in interrupts
+  // This will make the function safe when write operations are done in interrupts
   volatile uint16_t write = ring->write;
   uint16_t end = (write >= ring->read_tmp) ? write : BUFFER_END + 1;
 
@@ -99,7 +99,7 @@ uint16_t virtio_buffer_peek(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 
 uint16_t virtio_buffer_write_available(virtio_buffer_t *ring)
 {
-  // This will make the function safe when read openrations are done in interrupts
+  // This will make the function safe when read operations are done in interrupts
   volatile uint16_t read = ring->read;
 
   if (ring->write < read) {
@@ -110,7 +110,7 @@ uint16_t virtio_buffer_write_available(virtio_buffer_t *ring)
 
 uint16_t virtio_buffer_write(virtio_buffer_t *ring, uint8_t *src, uint16_t size)
 {
-  // This will make the function safe when read openrations are done in a interrupt
+  // This will make the function safe when read operations are done in a interrupt
   volatile uint16_t read = ring->read;
   uint16_t end = (ring->write < read) ? read - 1
                  : (read == 0) ? BUFFER_END : BUFFER_END + 1;
