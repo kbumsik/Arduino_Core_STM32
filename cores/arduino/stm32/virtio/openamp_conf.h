@@ -77,12 +77,6 @@ extern "C" {
 #include "virt_i2c.h"
 #endif /* VIRTUAL_I2C_MODULE_ENABLED */
 
-
-
-/* USER CODE BEGIN INCLUDE */
-
-/* USER CODE END INCLUDE */
-
 /** @addtogroup OPENAMP_MW
   * @{
   */

@@ -37,11 +37,6 @@
 #include "stm32_def.h"
 #include "openamp_conf.h"
 
-/* Within 'USER CODE' section, code will be kept by default at each generation */
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
 /* Private define ------------------------------------------------------------*/
 #define MASTER_CPU_ID       0
 #define REMOTE_CPU_ID       1
@@ -164,12 +159,7 @@ void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
   */
 void IPCC_RX1_IRQHandler(void)
 {
-  /* USER CODE BEGIN IPCC_RX1_IRQn 0 */
-  /* USER CODE END IPCC_RX1_IRQn 0 */
   HAL_IPCC_RX_IRQHandler(&hipcc);
-  /* USER CODE BEGIN IPCC_RX1_IRQn 1 */
-
-  /* USER CODE END IPCC_RX1_IRQn 1 */
 }
 
 #endif /* VIRTIOCON */
