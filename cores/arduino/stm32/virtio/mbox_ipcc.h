@@ -30,10 +30,6 @@
 #define IPCC_IRQ_SUBPRIO    0
 #endif
 
-/* USER CODE BEGIN firstSection */
-/* can be used to modify / undefine following code or add new definitions */
-/* USER CODE END firstSection */
-
 /* Includes ------------------------------------------------------------------*/
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -41,10 +37,6 @@
 int MAILBOX_Init(void);
 int MAILBOX_Notify(void *priv, uint32_t id);
 void MAILBOX_Notify_Rx_Buf_Free(void);
-
-/* USER CODE BEGIN lastSection */
-/* can be used to modify / undefine previous code or add new definitions */
-/* USER CODE END lastSection */
 
 #endif /* VIRTIOCON */
 #endif /* MBOX_IPCC_H_ */
