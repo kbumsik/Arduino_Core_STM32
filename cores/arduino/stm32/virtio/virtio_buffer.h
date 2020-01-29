@@ -34,8 +34,8 @@ extern "C" {
 
 typedef struct {
   uint8_t buffer[VIRTIO_BUFFER_SIZE];
-  volatile uint16_t write;
-  volatile uint16_t read;
+  volatile uint16_t write_index;
+  volatile uint16_t read_index;
 } virtio_buffer_t;
 
 void virtio_buffer_init(virtio_buffer_t *ring);
