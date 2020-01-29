@@ -29,15 +29,10 @@
 
 #define BUFFER_END (VIRTIO_BUFFER_SIZE - 1)
 
-static uint16_t read_tmp(virtio_buffer_t *ring, uint8_t *dst, uint16_t size);
-static void read_commit(virtio_buffer_t *ring);
-static void read_rollback(virtio_buffer_t *ring);
-
 void virtio_buffer_init(virtio_buffer_t *ring)
 {
   ring->write = 0;
   ring->read = 0;
-  ring->read_tmp = 0;
 }
 
 uint16_t virtio_buffer_read_available(virtio_buffer_t *ring)
@@ -51,35 +46,27 @@ uint16_t virtio_buffer_read_available(virtio_buffer_t *ring)
   return write - ring->read;
 }
 
-static uint16_t read_tmp(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
+static uint16_t read(virtio_buffer_t *ring, uint8_t *dst, uint16_t size, bool peek)
 {
   // This will make the function safe when write operations are done in interrupts
   volatile uint16_t write = ring->write;
-  uint16_t end = (write >= ring->read_tmp) ? write : BUFFER_END + 1;
+  uint16_t end = (write >= ring->read) ? write : BUFFER_END + 1;
 
-  size = min(end - ring->read_tmp, size);
-  memcpy(dst, ring->buffer + ring->read_tmp, size);
-  ring->read_tmp += size;
-  if (ring->read_tmp > BUFFER_END) {
-    ring->read_tmp = 0;
+  size = min(end - ring->read, size);
+  memcpy(dst, ring->buffer + ring->read, size);
+  if (!peek) {
+    ring->read += size;
+
+    if (ring->read > BUFFER_END) {
+      ring->read = 0;
+    }
   }
   return size;
 }
 
-static void read_commit(virtio_buffer_t *ring)
-{
-  ring->read = ring->read_tmp;
-}
-
-static void read_rollback(virtio_buffer_t *ring)
-{
-  ring->read_tmp = ring->read;
-}
-
 uint16_t virtio_buffer_read(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
 {
-  uint16_t recv_size = read_tmp(ring, dst, size);
-  read_commit(ring);
+  uint16_t recv_size = read(ring, dst, size, false);
   return recv_size;
 }
 
@@ -91,9 +78,8 @@ uint16_t virtio_buffer_peek(virtio_buffer_t *ring, uint8_t *dst, uint16_t size)
   size = min(size, virtio_buffer_read_available(ring));
   uint16_t recv_size = 0;
   while (recv_size < size) {
-    recv_size += read_tmp(ring, dst + recv_size, size - recv_size);
+    recv_size += read(ring, dst + recv_size, size - recv_size, true);
   }
-  read_rollback(ring);
   return recv_size;
 }
 
