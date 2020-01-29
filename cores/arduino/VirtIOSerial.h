@@ -26,9 +26,26 @@
 
 #if defined (VIRTIOCON)
 #include "Stream.h"
+#include "openamp.h"
+#include "openamp_log.h"
+#include "wiring.h"
+#include "virtio_buffer.h"
 
 //================================================================================
 // Serial over OpenAmp
+
+// This structure is used to be able to get VirtIOSerial instance (C++ class)
+// from handler (C structure) specially for interrupt management
+typedef struct  {
+  // Those 2 first fields must remain in this order at the beginning of the structure
+  void    *__this;
+  VIRT_UART_HandleTypeDef handle;
+  bool initialized;
+  bool first_message_discarded;
+  virtio_buffer_t ring;
+} VirtIOSerialObj_t;
+
+
 class VirtIOSerial : public Stream {
   public:
     void begin(void);
@@ -44,11 +61,19 @@ class VirtIOSerial : public Stream {
     virtual size_t write(uint8_t);
     virtual size_t write(const uint8_t *buffer, size_t size);
     virtual void flush(void);
+
+    static void rxGenericCallback(VIRT_UART_HandleTypeDef *huart);
+    void rxCallback(VIRT_UART_HandleTypeDef *huart);
+
     using Print::write; // pull in write(str) from Print
     operator bool(void)
     {
       return true;
     }
+
+  private:
+    static uint32_t VirtIOSerial_index;
+    VirtIOSerialObj_t _VirtIOSerialObj;
 };
 
 extern VirtIOSerial SerialVirtIO;

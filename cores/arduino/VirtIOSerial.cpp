@@ -23,39 +23,45 @@
 
 #if defined (VIRTIOCON)
 
-#include "openamp.h"
-#include "openamp_log.h"
-#include "wiring.h"
-#include "virtio_buffer.h"
+#include "VirtIOSerial.h"
+#if !defined(VIRTIOSERIAL_NUM)
+#define VIRTIOSERIAL_NUM    1
+#endif
 
+VirtIOSerialObj_t *VirtIOSerial_Handle[VIRTIOSERIAL_NUM] = {NULL};
+
+uint32_t VirtIOSerial::VirtIOSerial_index = 0;
+
+// Default instance
 VirtIOSerial SerialVirtIO;
+
 void serialEventVirtIO() __attribute__((weak));
-
-static VIRT_UART_HandleTypeDef huart;
-static bool initialized = false;
-static bool first_message_discarded = false;
-static virtio_buffer_t ring;
-
-void rxCallback(VIRT_UART_HandleTypeDef *huart);
+VirtIOSerialObj_t *get_VirtIOSerial_obj(VIRT_UART_HandleTypeDef *huart);
 
 void VirtIOSerial::begin(void)
 {
-  virtio_buffer_init(&ring);
-  if (initialized) {
+  virtio_buffer_init(&_VirtIOSerialObj.ring);
+  if (_VirtIOSerialObj.initialized) {
     return;
   }
   if (OPENAMP_Init() != 0) {
     Error_Handler();
   }
-  if (VIRT_UART_Init(&huart) != VIRT_UART_OK) {
+  if (VIRT_UART_Init(&_VirtIOSerialObj.handle) != VIRT_UART_OK) {
     Error_Handler();
   }
+
+  VirtIOSerial_index ++;
+  _VirtIOSerialObj.__this = (void *)this;
+
   /* Need to register callback for message reception by channels */
-  if (VIRT_UART_RegisterCallback(&huart, VIRT_UART_RXCPLT_CB_ID, rxCallback) != VIRT_UART_OK) {
+  if (VIRT_UART_RegisterCallback(&_VirtIOSerialObj.handle, VIRT_UART_RXCPLT_CB_ID, rxGenericCallback) != VIRT_UART_OK) {
     Error_Handler();
   }
-  initialized = true;
-  first_message_discarded = false;
+
+  VirtIOSerial_Handle[VirtIOSerial_index] = &_VirtIOSerialObj;
+  _VirtIOSerialObj.initialized = true;
+  _VirtIOSerialObj.first_message_discarded = false;
 }
 
 void VirtIOSerial::begin(uint32_t /* baud_count */)
@@ -73,13 +79,13 @@ void VirtIOSerial::begin(uint32_t /* baud_count */, uint8_t /* config */)
 void VirtIOSerial::end()
 {
   OPENAMP_DeInit();
-  virtio_buffer_init(&ring);
-  initialized = false;
+  virtio_buffer_init(&_VirtIOSerialObj.ring);
+  _VirtIOSerialObj.initialized = false;
 }
 
 int VirtIOSerial::available(void)
 {
-  return virtio_buffer_read_available(&ring);
+  return virtio_buffer_read_available(&_VirtIOSerialObj.ring);
 }
 
 int VirtIOSerial::availableForWrite()
@@ -91,9 +97,9 @@ int VirtIOSerial::availableForWrite()
 
 int VirtIOSerial::peek(void)
 {
-  if (virtio_buffer_read_available(&ring) > 0) {
+  if (virtio_buffer_read_available(&_VirtIOSerialObj.ring) > 0) {
     uint8_t tmp;
-    virtio_buffer_peek(&ring, &tmp, 1);
+    virtio_buffer_peek(&_VirtIOSerialObj.ring, &tmp, 1);
     return tmp;
   } else {
     return -1;
@@ -134,7 +140,7 @@ size_t VirtIOSerial::write(uint8_t ch)
 // until all bytes are sent.
 size_t VirtIOSerial::write(const uint8_t *buffer, size_t size)
 {
-  if (VIRT_UART_Transmit(&huart, const_cast<uint8_t *>(buffer), size) == VIRT_UART_ERROR) {
+  if (VIRT_UART_Transmit(&_VirtIOSerialObj.handle, const_cast<uint8_t *>(buffer), size) == VIRT_UART_ERROR) {
     // This error usually happens when rpmsg is not ready for
     return 0;
   }
@@ -148,26 +154,44 @@ void VirtIOSerial::flush(void)
   return;
 }
 
-void rxCallback(VIRT_UART_HandleTypeDef *huart)
+void VirtIOSerial::rxGenericCallback(VIRT_UART_HandleTypeDef *huart)
 {
+  VirtIOSerialObj_t *obj = get_VirtIOSerial_obj(huart);
+  VirtIOSerial *VIOS = (VirtIOSerial *)(obj->__this);
+
+  VIOS->rxCallback(huart);
+}
+
+void VirtIOSerial::rxCallback(VIRT_UART_HandleTypeDef *huart)
+{
+
   // Linux host must send a dummy data first to finish initialization of rpmsg
   // on the coprocessor side. This message should be discarded.
   // run_arduino_gen.sh script will send dummy data: "DUMMY".
   // See: https://github.com/OpenAMP/open-amp/issues/182
   // See: run_arduino_gen.sh
-  if (!first_message_discarded) {
+  if (!_VirtIOSerialObj.first_message_discarded) {
     huart->RxXferSize = 0;
-    first_message_discarded = true;
+    _VirtIOSerialObj.first_message_discarded = true;
   }
 
   /* copy received msg in a variable to sent it back to master processor in main infinite loop*/
-  size_t size = min(huart->RxXferSize, virtio_buffer_write_available(&ring));
+  size_t size = min(huart->RxXferSize, virtio_buffer_write_available(&_VirtIOSerialObj.ring));
   while (size > 0) {
-    size -= virtio_buffer_write(&ring, huart->pRxBuffPtr, size);
+    size -= virtio_buffer_write(&_VirtIOSerialObj.ring, huart->pRxBuffPtr, size);
   }
-  if (virtio_buffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
+  if (virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_BUFFER_SIZE) {
     MAILBOX_Notify_Rx_Buf_Free();
   }
+}
+
+/* Aim of the function is to get _VirtIOSerialObj pointer using huart pointer */
+/* Highly inspired from magical linux kernel's "container_of" */
+VirtIOSerialObj_t *get_VirtIOSerial_obj(VIRT_UART_HandleTypeDef *huart)
+{
+  VirtIOSerialObj_t *obj;
+  obj = (VirtIOSerialObj_t *)((char *)huart - offsetof(VirtIOSerialObj_t, handle));
+  return (obj);
 }
 
 #endif /* VIRTIOCON */
