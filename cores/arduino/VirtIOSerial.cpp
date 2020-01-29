@@ -113,17 +113,15 @@ int VirtIOSerial::read(void)
 
 size_t VirtIOSerial::readBytes(char *buffer, size_t length)
 {
-  const size_t size = length;
-  _startMillis = millis();
-  while (length > 0 && (millis() - _startMillis < _timeout)) {
-    uint16_t prev_write_available = virtio_buffer_write_available(&ring);
-    length -= virtio_buffer_read(&ring, reinterpret_cast<uint8_t *>(buffer), length);
-    if (prev_write_available < RPMSG_BUFFER_SIZE
-        && virtio_buffer_write_available(&ring) >= RPMSG_BUFFER_SIZE) {
-      MAILBOX_Notify_Rx_Buf_Free();
-    }
+  uint16_t prev_write_available = virtio_buffer_write_available(&_VirtIOSerialObj.ring);
+  const size_t size = virtio_buffer_read(&_VirtIOSerialObj.ring, reinterpret_cast<uint8_t *>(buffer), length);
+
+  if (prev_write_available < RPMSG_BUFFER_SIZE
+      && virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_BUFFER_SIZE) {
+    MAILBOX_Notify_Rx_Buf_Free();
   }
-  return size - length;
+
+  return size;
 }
 
 size_t VirtIOSerial::write(uint8_t ch)
