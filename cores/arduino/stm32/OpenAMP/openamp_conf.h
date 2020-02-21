@@ -152,7 +152,7 @@ extern int __OPENAMP_region_end__[];    /* defined by linker script */
 
 #endif
 
-#if defined STM32MP157Cxx
+#if defined STM32MP1xx
 #define VRING_RX_ADDRESS        -1        /* allocated by Master processor: CA7 */
 #define VRING_TX_ADDRESS        -1        /* allocated by Master processor: CA7 */
 #define VRING_BUFF_ADDRESS      -1        /* allocated by Master processor: CA7 */
