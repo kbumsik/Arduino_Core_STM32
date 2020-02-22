@@ -62,33 +62,52 @@ extern char system_log_buf[];
 #endif
 
 const struct shared_resource_table __attribute__((__section__(".resource_table"))) __attribute__((used)) resource_table = {
-.version = 1,
+  .version = 1,
 #if defined (__LOG_TRACE_IO_)
-.num = 2,
+  .num = 2,
 #else
-.num = 1,
+  .num = 1,
 #endif
-.reserved = {0, 0},
-.offset = {
-  offsetof(struct shared_resource_table, vdev),
-  offsetof(struct shared_resource_table, cm_trace),
-},
-
-/* Virtio device entry */
-.vdev = {
-  RSC_VDEV, VIRTIO_ID_RPMSG_, 0, RPMSG_IPU_C0_FEATURES, 0, 0, 0,
-  VRING_COUNT, {0, 0},
-},
-
-/* Vring rsc entry - part of vdev rsc entry */
-.vring0 = {VRING_TX_ADDRESS, VRING_ALIGNMENT, VRING_NUM_BUFFS, VRING0_ID, 0},
-.vring1 = {VRING_RX_ADDRESS, VRING_ALIGNMENT, VRING_NUM_BUFFS, VRING1_ID, 0},
-
+  .reserved = {0, 0},
+  .offset = {
+    offsetof(struct shared_resource_table, vdev),
+    offsetof(struct shared_resource_table, cm_trace),
+  },
+  /* Virtio device entry */
+  .vdev = {
+    .type = RSC_VDEV,
+    .id = VIRTIO_ID_RPMSG_,
+    .notifyid = 0,
+    .dfeatures = RPMSG_IPU_C0_FEATURES,
+    .gfeatures = 0,
+    .config_len = 0,
+    .status = 0,
+    .num_of_vrings = VRING_COUNT,
+    .reserved = {0, 0},
+  },
+  /* Vring rsc entry - part of vdev rsc entry */
+  .vring0 = {
+    .da = VRING_TX_ADDRESS,
+    .align = VRING_ALIGNMENT,
+    .num = VRING_NUM_BUFFS,
+    .notifyid = VRING0_ID,
+    .reserved = 0
+  },
+  .vring1 = {
+    .da = VRING_RX_ADDRESS,
+    .align = VRING_ALIGNMENT,
+    .num = VRING_NUM_BUFFS,
+    .notifyid = VRING1_ID,
+    .reserved = 0
+  },
 #if defined (__LOG_TRACE_IO_)
-.cm_trace = {
-  RSC_TRACE,
-  (uint32_t)system_log_buf, SYSTEM_TRACE_BUF_SZ, 0, "cm4_log",
-},
+  .cm_trace = {
+    .type = RSC_TRACE,
+    .da = (uint32_t)system_log_buf,
+    .len = SYSTEM_TRACE_BUF_SZ,
+    .reserved = 0,
+    .name = "arduino_core_debug",
+  },
 #endif
 } ;
 
