@@ -21,13 +21,6 @@
 #include "openamp/open_amp.h"
 #include "openamp_conf.h"
 
-/* Place resource table in special ELF section */
-//#define __section_t(S)          __attribute__((__section__(#S)))
-//#define __resource              __section_t(.resource_table)
-
-
-
-
 /* Resource table for the given remote */
 struct shared_resource_table {
   unsigned int version;

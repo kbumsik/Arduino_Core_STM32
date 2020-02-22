@@ -21,35 +21,9 @@
   ******************************************************************************
   */
 #ifdef VIRTIOCON
-/** @addtogroup RSC_TABLE
-  * @{
-  */
 
-/** @addtogroup resource_table
-  * @{
-  */
-
-/** @addtogroup resource_table_Private_Includes
-  * @{
-  */
 #include "rsc_table.h"
 #include "openamp/open_amp.h"
-
-/**
-  * @}
-  */
-
-/** @addtogroup resource_table_Private_TypesDefinitions
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup resource_table_Private_Defines
-  * @{
-  */
 
 #define RPMSG_IPU_C0_FEATURES       1
 #define VRING_COUNT             2
