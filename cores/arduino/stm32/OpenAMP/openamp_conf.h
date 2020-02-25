@@ -30,10 +30,6 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#if defined (__LOG_TRACE_IO_) || defined(__LOG_UART_IO_)
-#include "openamp_log.h"
-#endif
-
 /* ########################## Mailbox Interface Selection ############################## */
 /**
   * @brief This is the list of Mailbox interface  to be used in the OpenAMP MW
@@ -137,29 +133,6 @@ extern int __OPENAMP_region_end__[];    /* defined by linker script */
 #define VDEV_ID                 0xFF
 #define VRING0_ID               0         /* VRING0 ID (master to remote) fixed to 0 for linux compatibility*/
 #define VRING1_ID               1         /* VRING1 ID (remote to master) fixed to 1 for linux compatibility  */
-
-/**
-  * @}
-  */
-
-/** @defgroup OPENAMP_CONF_Exported_Macros OPENAMP_CONF_Exported_Macros
-  * @brief Aliases.
-  * @{
-  */
-
-/* DEBUG macros */
-
-#if defined (__LOG_TRACE_IO_) || defined(__LOG_UART_IO_)
-#define OPENAMP_log_dbg               log_dbg
-#define OPENAMP_log_info              log_info
-#define OPENAMP_log_warn              log_warn
-#define OPENAMP_log_err               log_err
-#else
-#define OPENAMP_log_dbg(...)
-#define OPENAMP_log_info(...)
-#define OPENAMP_log_warn(...)
-#define OPENAMP_log_err(...)
-#endif
 
 /**
   * @}
