@@ -92,7 +92,7 @@ int VirtIOSerial::availableForWrite()
 {
   // Just return max length of VIRT_UART_Transmit() can transmit.
   // See VIRT_UART_Transmit().
-  return RPMSG_BUFFER_SIZE - 16;
+  return RPMSG_BUFFER_SIZE - RPMSG_VRING_HEADER_SIZE;
 }
 
 int VirtIOSerial::peek(void)
