@@ -13,6 +13,16 @@
 #define RPMSG_VRING_HEADER_SIZE (16)
 #define RPMSG_VRING_PAYLOAD_SIZE (RPMSG_BUFFER_SIZE - RPMSG_VRING_HEADER_SIZE)
 
+/**
+ * number of rpmsg buffer
+ * This means that a single call of rproc_virtio_notified(rvdev.vdev, VRING1_ID)
+ * will trigger VirtIOSerial::rxCallback() VRING_NUM_BUFFS times at maximum.
+ * A buffer handles VirtIOSerial::rxCallback() requires to be
+ * (RPMSG_VRING_PAYLOAD_SIZE * VRING_NUM_BUFFS) at minimum to prevent overflow.
+ */
+#define VRING_NUM_BUFFS         16
+#define RPMSG_VRING_TOTAL_PAYLOAD_SIZE (RPMSG_VRING_PAYLOAD_SIZE * VRING_NUM_BUFFS)
+
 #if defined (__LOG_TRACE_IO_)
 // OpenAMP trace (log) buffer configuration. See rsc_table.c and Print.cpp
 #define SYSTEM_TRACE_BUF_SZ 2048

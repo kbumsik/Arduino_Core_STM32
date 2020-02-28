@@ -23,6 +23,10 @@
 
 #ifdef VIRTIOCON
 
+/**
+ * Note: Do not remove this. Removing this might not trigger compile error but
+ * the configuration can be significantly different.
+ */
 #include "virtio_config.h"
 
 #ifdef __cplusplus
@@ -121,7 +125,9 @@ extern int __OPENAMP_region_end__[];    /* defined by linker script */
 #define VRING_TX_ADDRESS        -1        /* allocated by Master processor: CA7 */
 #define VRING_BUFF_ADDRESS      -1        /* allocated by Master processor: CA7 */
 #define VRING_ALIGNMENT         16        /* fixed to match with linux constraint */
+#ifndef VRING_NUM_BUFFS
 #define VRING_NUM_BUFFS         16        /* number of rpmsg buffer */
+#endif
 #else
 #error "VRING configuration for the device missing"
 #endif

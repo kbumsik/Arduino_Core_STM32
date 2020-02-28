@@ -30,7 +30,13 @@
 extern "C" {
 #endif
 
-#define VIRTIO_BUFFER_SIZE (RPMSG_VRING_PAYLOAD_SIZE * 2)
+/**
+ * See virtio_config.h for the size decision.
+ * The multiplier should be at least 1.
+ * If VIRTIO_BUFFER_SIZE is still too big, RPMSG_VRING_TOTAL_PAYLOAD_SIZE
+ * can be reduced by reducing the number of VRING_NUM_BUFFS in virtio_config.h.
+ */
+#define VIRTIO_BUFFER_SIZE (RPMSG_VRING_TOTAL_PAYLOAD_SIZE * 2)
 
 typedef struct {
   uint8_t buffer[VIRTIO_BUFFER_SIZE];
