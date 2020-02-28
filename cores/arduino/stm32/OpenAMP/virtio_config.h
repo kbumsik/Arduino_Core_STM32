@@ -23,10 +23,15 @@
 #define VRING_NUM_BUFFS         16
 #define RPMSG_VRING_TOTAL_PAYLOAD_SIZE (RPMSG_VRING_PAYLOAD_SIZE * VRING_NUM_BUFFS)
 
-#if defined (__LOG_TRACE_IO_)
-// OpenAMP trace (log) buffer configuration. See rsc_table.c and Print.cpp
-#define SYSTEM_TRACE_BUF_SZ 2048
-extern char system_log_buf[SYSTEM_TRACE_BUF_SZ]; /*!< buffer for debug traces */
+#if defined (VIRTIO_LOG)
+/**
+ * OpenAMP trace (log) buffer configuration.
+ * Users are free to redefine the size if needed.
+ */
+#ifndef VIRTIO_LOG_BUFFER_SIZE
+#define VIRTIO_LOG_BUFFER_SIZE (2048)
+#endif
+
 #endif
 
 #endif // __VIRTIO_CONFIG_H

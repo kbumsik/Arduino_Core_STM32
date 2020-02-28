@@ -28,6 +28,10 @@
 
 #include "Print.h"
 
+#if defined (VIRTIO_LOG)
+#include "virtio_log.h"
+#endif
+
 // Public Methods //////////////////////////////////////////////////////////////
 
 /* default implementation: may be overridden */
@@ -197,32 +201,6 @@ size_t Print::println(const Printable &x)
 }
 
 extern "C" {
-#if defined (__LOG_TRACE_IO_)
-  /**
-   * By writing OpenAMP trace (log) buffer here, the Linux host can access
-   * to the content by the following command:
-   *   $ cat /sys/kernel/debug/remoteproc/remoteproc0/trace0
-   * Ceveats - When the buffer overflows (2kb), the buffer is cleaned by
-   * a null character. 2kb will be enough for core_debug() logging.
-   */
-#include "virtio_config.h"
-
-  char system_log_buf[SYSTEM_TRACE_BUF_SZ];
-
-  void log_buff(uint8_t *data, uint32_t size)
-  {
-    static int offset = 0;
-
-    for (uint32_t i = 0; i < size; i++) {
-      system_log_buf[offset++] = *(data + i);
-      if ((offset + 1) >= SYSTEM_TRACE_BUF_SZ) {
-        offset = 0;
-      }
-    }
-    system_log_buf[offset] = '\0';
-  }
-#endif
-
   __attribute__((weak))
   int _write(int file, char *ptr, int len)
   {
@@ -230,8 +208,8 @@ extern "C" {
       case STDOUT_FILENO:
       case STDERR_FILENO:
         /* Used for core_debug() */
-#if defined (__LOG_TRACE_IO_)
-        log_buff((uint8_t *)ptr, (uint32_t)len);
+#if defined (VIRTIO_LOG)
+        virtio_log((uint8_t *)ptr, (uint32_t)len);
 #elif defined(HAL_UART_MODULE_ENABLED) && !defined(HAL_UART_MODULE_ONLY)
         uart_debug_write((uint8_t *)ptr, (uint32_t)len);
 #endif
