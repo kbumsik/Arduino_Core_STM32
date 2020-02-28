@@ -10,7 +10,8 @@
 #endif
 
 // Size of the vqueue message in the buffer
-#define RPMSG_VRING_HEADER_SIZE 16
+#define RPMSG_VRING_HEADER_SIZE (16)
+#define RPMSG_VRING_PAYLOAD_SIZE (RPMSG_BUFFER_SIZE - RPMSG_VRING_HEADER_SIZE)
 
 #if defined (__LOG_TRACE_IO_)
 // OpenAMP trace (log) buffer configuration. See rsc_table.c and Print.cpp

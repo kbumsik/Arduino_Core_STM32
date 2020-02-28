@@ -30,7 +30,7 @@
 extern "C" {
 #endif
 
-#define VIRTIO_BUFFER_SIZE (RPMSG_BUFFER_SIZE * 2)
+#define VIRTIO_BUFFER_SIZE (RPMSG_VRING_PAYLOAD_SIZE * 2)
 
 typedef struct {
   uint8_t buffer[VIRTIO_BUFFER_SIZE];

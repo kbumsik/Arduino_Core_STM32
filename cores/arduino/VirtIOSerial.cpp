@@ -122,8 +122,8 @@ size_t VirtIOSerial::readBytes(char *buffer, size_t length)
   uint16_t prev_write_available = virtio_buffer_write_available(&_VirtIOSerialObj.ring);
   const size_t size = virtio_buffer_read(&_VirtIOSerialObj.ring, reinterpret_cast<uint8_t *>(buffer), length);
 
-  if (prev_write_available < RPMSG_BUFFER_SIZE
-      && virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_BUFFER_SIZE) {
+  if (prev_write_available < RPMSG_VRING_PAYLOAD_SIZE
+      && virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_VRING_PAYLOAD_SIZE) {
     MAILBOX_Notify_Rx_Buf_Free();
   }
 
@@ -180,7 +180,7 @@ void VirtIOSerial::rxCallback(VIRT_UART_HandleTypeDef *huart)
   while (size > 0) {
     size -= virtio_buffer_write(&_VirtIOSerialObj.ring, huart->pRxBuffPtr, size);
   }
-  if (virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_BUFFER_SIZE) {
+  if (virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_VRING_PAYLOAD_SIZE) {
     MAILBOX_Notify_Rx_Buf_Free();
   }
 }
