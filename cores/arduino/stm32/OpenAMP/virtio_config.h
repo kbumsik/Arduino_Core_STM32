@@ -3,8 +3,8 @@
 
 // Size of buffer of each vring buffers
 #ifdef RPMSG_BUFFER_SIZE
-#error "RPMSG_BUFFER_SIZE should be aligned with the kernel definition."
-#error "Reference: https://elixir.bootlin.com/linux/v5.5.2/source/drivers/rpmsg/virtio_rpmsg_bus.c#L137"
+#warning "RPMSG_BUFFER_SIZE should be aligned with the kernel definition."
+#warning "Reference: https://elixir.bootlin.com/linux/v5.5.2/source/drivers/rpmsg/virtio_rpmsg_bus.c#L137"
 #else
 #define RPMSG_BUFFER_SIZE (512)
 #endif
@@ -20,7 +20,9 @@
  * A buffer handles VirtIOSerial::rxCallback() requires to be
  * (RPMSG_VRING_PAYLOAD_SIZE * VRING_NUM_BUFFS) at minimum to prevent overflow.
  */
-#define VRING_NUM_BUFFS         16
+#ifndef VRING_NUM_BUFFS
+#define VRING_NUM_BUFFS         (16)
+#endif
 #define RPMSG_VRING_TOTAL_PAYLOAD_SIZE (RPMSG_VRING_PAYLOAD_SIZE * VRING_NUM_BUFFS)
 
 #if defined (VIRTIO_LOG)
