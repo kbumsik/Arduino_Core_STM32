@@ -24,6 +24,8 @@
 #if defined (VIRTIOCON)
 
 #include "VirtIOSerial.h"
+#include "core_debug.h"
+
 #if !defined(VIRTIOSERIAL_NUM)
 #define VIRTIOSERIAL_NUM    1
 #endif
@@ -62,6 +64,9 @@ void VirtIOSerial::begin(void)
   VirtIOSerial_Handle[VirtIOSerial_index] = &_VirtIOSerialObj;
   _VirtIOSerialObj.initialized = true;
   _VirtIOSerialObj.first_message_discarded = false;
+
+  // This will wait for the first message "DUMMY", see rxCallback().
+  OPENAMP_Wait_EndPointready(&_VirtIOSerialObj.handle.ept);
 }
 
 void VirtIOSerial::begin(uint32_t /* baud_count */)
@@ -85,18 +90,21 @@ void VirtIOSerial::end()
 
 int VirtIOSerial::available(void)
 {
+  checkMessageFromISR();
   return virtio_buffer_read_available(&_VirtIOSerialObj.ring);
 }
 
 int VirtIOSerial::availableForWrite()
 {
+  checkMessageFromISR();
   // Just return max length of VIRT_UART_Transmit() can transmit.
   // See VIRT_UART_Transmit().
-  return RPMSG_BUFFER_SIZE - RPMSG_VRING_HEADER_SIZE;
+  return RPMSG_VRING_PAYLOAD_SIZE;
 }
 
 int VirtIOSerial::peek(void)
 {
+  checkMessageFromISR();
   if (virtio_buffer_read_available(&_VirtIOSerialObj.ring) > 0) {
     uint8_t tmp;
     virtio_buffer_peek(&_VirtIOSerialObj.ring, &tmp, 1);
@@ -119,14 +127,11 @@ int VirtIOSerial::read(void)
 
 size_t VirtIOSerial::readBytes(char *buffer, size_t length)
 {
+  checkMessageFromISR();
   uint16_t prev_write_available = virtio_buffer_write_available(&_VirtIOSerialObj.ring);
   const size_t size = virtio_buffer_read(&_VirtIOSerialObj.ring, reinterpret_cast<uint8_t *>(buffer), length);
-
-  if (prev_write_available < RPMSG_VRING_TOTAL_PAYLOAD_SIZE
-      && virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_VRING_TOTAL_PAYLOAD_SIZE) {
-    MAILBOX_Notify_Rx_Buf_Free();
-  }
-
+  // The ring buffer might be available enough to write after reading
+  checkMessageFromISR();
   return size;
 }
 
@@ -137,21 +142,41 @@ size_t VirtIOSerial::write(uint8_t ch)
 }
 
 // Warning: Currently VirtIOSerial implementation is synchronous, blocking
-// until all bytes are sent.
+// until all bytes are sent. But it will be fast enough.
 size_t VirtIOSerial::write(const uint8_t *buffer, size_t size)
 {
-  if (VIRT_UART_Transmit(&_VirtIOSerialObj.handle, const_cast<uint8_t *>(buffer), size) == VIRT_UART_ERROR) {
-    // This error usually happens when rpmsg is not ready for
+  checkMessageFromISR();
+  if (VIRT_UART_Transmit(&_VirtIOSerialObj.handle, const_cast<uint8_t *>(buffer), size) != VIRT_UART_OK) {
+    // This error usually happens when size > 496. See VirtIOSerial::availableForWrite()
+    core_debug("ERROR: VirtIOSerial::write() failed. Check availableForWrite().\n");
     return 0;
   }
+  // It is likely receive "buf free" from the Linux host right after
+  // VIRT_UART_Transmit(). So check it here too.
+  checkMessageFromISR();
   return size;
 }
 
 void VirtIOSerial::flush(void)
 {
+  checkMessageFromISR();
   // write() is blocked until all bytes are sent. So flush() doesn't need to do
   // anything. See rpmsg_send().
   return;
+}
+
+/**
+ * @brief Check if RPMsg message arrived from IPCC ISR
+ * @note  This should called as mush as possible to consume RPMsg ring buffers,
+ *        so that the host processor can send more messages quickly.
+ */
+void VirtIOSerial::checkMessageFromISR(void)
+{
+  OPENAMP_check_for_tx_message();
+  if (virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_VRING_TOTAL_PAYLOAD_SIZE) {
+    // This calls rxCallback() VRING_NUM_BUFFS times at maximum
+    OPENAMP_check_for_rx_message();
+  }
 }
 
 void VirtIOSerial::rxGenericCallback(VIRT_UART_HandleTypeDef *huart)
@@ -179,9 +204,6 @@ void VirtIOSerial::rxCallback(VIRT_UART_HandleTypeDef *huart)
   size_t size = min(huart->RxXferSize, virtio_buffer_write_available(&_VirtIOSerialObj.ring));
   while (size > 0) {
     size -= virtio_buffer_write(&_VirtIOSerialObj.ring, huart->pRxBuffPtr, size);
-  }
-  if (virtio_buffer_write_available(&_VirtIOSerialObj.ring) >= RPMSG_VRING_TOTAL_PAYLOAD_SIZE) {
-    MAILBOX_Notify_Rx_Buf_Free();
   }
 }
 

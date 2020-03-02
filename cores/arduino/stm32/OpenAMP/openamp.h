@@ -48,6 +48,9 @@ int OPENAMP_create_endpoint(struct rpmsg_endpoint *ept, const char *name,
                             uint32_t dest, rpmsg_ept_cb cb,
                             rpmsg_ns_unbind_cb unbind_cb);
 
+/* Check for new rpmsg reception */
+void OPENAMP_check_for_message(void);
+
 /* Wait loop on endpoint ready ( message dest address is know)*/
 void OPENAMP_Wait_EndPointready(struct rpmsg_endpoint *rp_ept);
 

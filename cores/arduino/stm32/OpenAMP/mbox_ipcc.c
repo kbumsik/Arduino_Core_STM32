@@ -36,6 +36,7 @@
 #include "openamp/open_amp.h"
 #include "stm32_def.h"
 #include "openamp_conf.h"
+#include "core_debug.h"
 
 /* Private define ------------------------------------------------------------*/
 #define MASTER_CPU_ID       0
@@ -43,16 +44,16 @@
 #define IPCC_CPU_A7         MASTER_CPU_ID
 #define IPCC_CPU_M4         REMOTE_CPU_ID
 
-#define RX_NO_MSG           0
-#define RX_NEW_MSG          1
-#define RX_BUF_FREE         2
+typedef enum {
+  RX_NO_MSG = 0,
+  RX_NEW_MSG = 1,
+  RX_BUF_FREE = 2
+} rx_status_t;
 
 /* Private variables ---------------------------------------------------------*/
 IPCC_HandleTypeDef hipcc;
-extern struct rpmsg_virtio_device rvdev;
-
-
-
+rx_status_t msg_received_ch1 = RX_NO_MSG;
+rx_status_t msg_received_ch2 = RX_NO_MSG;
 
 /* Private function prototypes -----------------------------------------------*/
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc, uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir);
@@ -68,6 +69,7 @@ int MAILBOX_Init(void)
   __HAL_RCC_IPCC_CLK_ENABLE();
   HAL_NVIC_SetPriority(IPCC_RX1_IRQn, IPCC_IRQ_PRIO, IPCC_IRQ_SUBPRIO);
   HAL_NVIC_EnableIRQ(IPCC_RX1_IRQn);
+
   hipcc.Instance = IPCC;
   if (HAL_IPCC_Init(&hipcc) != HAL_OK) {
     Error_Handler();
@@ -89,19 +91,61 @@ int MAILBOX_Init(void)
 }
 
 /**
-  * @brief  Callback function called by OpenAMP MW to notify message processing
-  * @param  VRING id
+ * @brief  Process vring messages received from IPCC ISR
+ * @param vdev: virtio device
+ * @param vring_id: Vring ID
+ * @retval : Operation result
+ */
+int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
+{
+  int ret = -1;
+
+  switch (vring_id) {
+    case VRING0_ID:
+      if (msg_received_ch1 == RX_BUF_FREE) {
+        /* This calls rpmsg_virtio_tx_callback(), which actually does nothing. */
+        rproc_virtio_notified(vdev, VRING0_ID);
+        msg_received_ch1 = RX_NO_MSG;
+        ret = 0;
+      }
+      break;
+    case VRING1_ID:
+      if (msg_received_ch2 == RX_NEW_MSG) {
+        /**
+         * This calls rpmsg_virtio_rx_callback(), which calls virt_uart rx callback
+         * RING_NUM_BUFFS times at maximum.
+         */
+        rproc_virtio_notified(vdev, VRING1_ID);
+        msg_received_ch2 = RX_NO_MSG;
+
+        /* The OpenAMP framework does not notify for free buf: do it here */
+        rproc_virtio_notified(NULL, VRING1_ID);
+        ret = 0;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+/**
+  * @brief  Callback function called by OpenAMP MW to notify message processing (aka. kick)
+  * @note   This callback is called by virtqueue_kick() in rpmsg_virtio_send_offchannel_raw().
+  *         Therefore, it is only called while tx, but not rx.
+  * @param  Vring id
   * @retval Operation result
   */
-int MAILBOX_Notify(void *priv, uint32_t id)
+int MAILBOX_Notify(void *priv, uint32_t vring_id)
 {
   uint32_t channel;
   (void)priv;
 
   /* Called after virtqueue processing: time to inform the remote */
-  if (id == VRING0_ID) {
+  if (vring_id == VRING0_ID) {
     channel = IPCC_CHANNEL_1;
-  } else if (id == VRING1_ID) {
+  } else if (vring_id == VRING1_ID) {
     /* Note: the OpenAMP framework never notifies this */
     channel = IPCC_CHANNEL_2;
     return -1;
@@ -121,37 +165,25 @@ int MAILBOX_Notify(void *priv, uint32_t id)
   return 0;
 }
 
-/**
-  * @brief  Notify Rx buffer is free to Master
-  */
-void MAILBOX_Notify_Rx_Buf_Free()
-{
-  HAL_IPCC_NotifyCPU(&hipcc, IPCC_CHANNEL_2, IPCC_CHANNEL_DIR_RX);
-}
-
 /* Private function  ---------------------------------------------------------*/
 /* Callback from IPCC Interrupt Handler: Master Processor informs that there are some free buffers */
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
+  msg_received_ch1 = RX_BUF_FREE;
+
   /* Inform A7 that we have received the 'buff free' msg */
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
-  rproc_virtio_notified(rvdev.vdev, VRING0_ID);
 }
 
 /* Callback from IPCC Interrupt Handler: new message received from Master Processor */
 void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
-  (void) hipcc;
-  (void) ChannelIndex;
-  (void) ChannelDir;
-  /* Don't inform A7 here, do it when the buffer has more than RPMSG_BUFFER_SIZE.
-   * See MAILBOX_Notify_Rx_Buf_Free() and VirIOSerial.cpp.
-   */
-  rproc_virtio_notified(rvdev.vdev, VRING1_ID);
-  /* The OpenAMP framework does not notify for free buf: do it here */
-  rproc_virtio_notified(NULL, VRING1_ID);
+  msg_received_ch2 = RX_NEW_MSG;
+
+  /* Don't inform A7 here */
+  HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
 }
 
 /**

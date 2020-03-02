@@ -30,13 +30,9 @@
 #define IPCC_IRQ_SUBPRIO    0
 #endif
 
-/* Includes ------------------------------------------------------------------*/
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
 int MAILBOX_Init(void);
+int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id);
 int MAILBOX_Notify(void *priv, uint32_t id);
-void MAILBOX_Notify_Rx_Buf_Free(void);
 
 #endif /* VIRTIOCON */
 #endif /* MBOX_IPCC_H_ */

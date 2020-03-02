@@ -73,6 +73,7 @@ class VirtIOSerial : public Stream {
   private:
     static uint32_t VirtIOSerial_index;
     VirtIOSerialObj_t _VirtIOSerialObj;
+    void checkMessageFromISR(void);
 };
 
 extern VirtIOSerial SerialVirtIO;

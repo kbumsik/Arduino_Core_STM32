@@ -161,9 +161,39 @@ int OPENAMP_create_endpoint(struct rpmsg_endpoint *ept, const char *name,
                           unbind_cb);
 }
 
+/**
+ * @brief Check and process any received messages from tx channel
+ * @note  Don't call this in an ISR.
+ */
+void OPENAMP_check_for_tx_message(void)
+{
+  MAILBOX_Poll(rvdev.vdev, VRING0_ID);
+}
+
+/**
+ * @brief Check and process any received messages from rx channel
+ * @note  Don't call this in an ISR.
+ */
+void OPENAMP_check_for_rx_message(void)
+{
+  MAILBOX_Poll(rvdev.vdev, VRING1_ID);
+}
+
+/**
+ * @brief Wait loop on rpmsg endpoint (VirtIOSerial) ready to send a message.
+ *        (until message dest address is known)
+ * @note  This will wait until the first message arrives from the Linux host.
+ *        If we send a rpmsg message before this it will fail.
+ * @note  Don't call this in an ISR.
+ * @see   VirtIOSerial::rxCallback
+ * @param rp_ept: virtio rpmsg endpoint
+ */
 void OPENAMP_Wait_EndPointready(struct rpmsg_endpoint *rp_ept)
 {
-  while (!is_rpmsg_ept_ready(rp_ept));
+  while (!is_rpmsg_ept_ready(rp_ept)) {
+    MAILBOX_Poll(rvdev.vdev, VRING0_ID);
+    MAILBOX_Poll(rvdev.vdev, VRING1_ID);
+  }
 }
 
 #endif /* VIRTIOCON */
