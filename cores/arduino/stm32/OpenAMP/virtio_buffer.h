@@ -32,7 +32,7 @@ extern "C" {
 
 /**
  * @brief Size of virtio ring buffer
- * @note  See virtio_config.h for the size decision.
+ * @note  See virtio_config.h for the size decision. (7937 bytes by default)
  *        The multiplier should be at least 1. As a result, the minimum
  *        required size of the initial virtio_buffer_write_available()
  *        must be RPMSG_VRING_TOTAL_PAYLOAD_SIZE.
@@ -40,7 +40,9 @@ extern "C" {
  *        can be reduced by reducing the number of VRING_NUM_BUFFS in
  *        virtio_config.h.
  */
-#define VIRTIO_BUFFER_SIZE (RPMSG_VRING_TOTAL_PAYLOAD_SIZE * 2 + 1)
+#ifndef VIRTIO_BUFFER_SIZE
+#define VIRTIO_BUFFER_SIZE (RPMSG_VRING_TOTAL_PAYLOAD_SIZE * 1 + 1)
+#endif
 
 typedef struct {
   uint8_t buffer[VIRTIO_BUFFER_SIZE];
