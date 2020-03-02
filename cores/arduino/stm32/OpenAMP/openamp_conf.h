@@ -77,30 +77,6 @@ extern "C" {
 #include "virt_i2c.h"
 #endif /* VIRTUAL_I2C_MODULE_ENABLED */
 
-/** @addtogroup OPENAMP_MW
-  * @{
-  */
-
-/** @defgroup OPENAMP_CONF OPENAMP_CONF
-  * @brief Configuration file for Openamp mw
-  * @{
-  */
-
-/** @defgroup OPENAMP_CONF_Exported_Variables OPENAMP_CONF_Exported_Variables
-  * @brief Public variables.
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @defgroup OPENAMP_CONF_Exported_Defines OPENAMP_CONF_Exported_Defines
-  * @brief Defines for configuration of the Openamp mw
-  * @{
-  */
-
-
 /*
  * for GCC add the following content to the .ld file:
  * MEMORY
@@ -132,45 +108,13 @@ extern int __OPENAMP_region_end__[];    /* defined by linker script */
 #error "VRING configuration for the device missing"
 #endif
 
-/* Fixed parameter */
+/* Fixed parameters */
 #define NUM_RESOURCE_ENTRIES    2
 #define VRING_COUNT             2
 
 #define VDEV_ID                 0xFF
 #define VRING0_ID               0         /* VRING0 ID (master to remote) fixed to 0 for linux compatibility*/
 #define VRING1_ID               1         /* VRING1 ID (remote to master) fixed to 1 for linux compatibility  */
-
-/**
-  * @}
-  */
-
-/** @defgroup OPENAMP_CONF_Exported_Types OPENAMP_CONF_Exported_Types
-  * @brief Types.
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @defgroup OPENAMP_CONF_Exported_FunctionsPrototype OPENAMP_CONF_Exported_FunctionsPrototype
-  * @brief Declaration of public functions for OpenAMP mw.
-  * @{
-  */
-
-/* Exported functions -------------------------------------------------------*/
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 #ifdef __cplusplus
 }
