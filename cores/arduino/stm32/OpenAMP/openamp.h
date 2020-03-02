@@ -30,28 +30,18 @@ extern "C" {
 #include <openamp/rpmsg.h>
 #include "openamp_conf.h"
 
-
 #define OPENAMP_send  rpmsg_send
 #define OPENAMP_destroy_ept rpmsg_destroy_ept
 
-/* Initialize the openamp framework*/
 int OPENAMP_Init(void);
-
-/* Deinitialize the openamp framework*/
 void OPENAMP_DeInit(void);
-
-/* Initialize the endpoint struct*/
 void OPENAMP_init_ept(struct rpmsg_endpoint *ept);
 
-/* Create and register the endpoint */
 int OPENAMP_create_endpoint(struct rpmsg_endpoint *ept, const char *name,
                             uint32_t dest, rpmsg_ept_cb cb,
                             rpmsg_ns_unbind_cb unbind_cb);
-
-/* Check for new rpmsg reception */
-void OPENAMP_check_for_message(void);
-
-/* Wait loop on endpoint ready ( message dest address is know)*/
+void OPENAMP_check_for_tx_message(void);
+void OPENAMP_check_for_rx_message(void);
 void OPENAMP_Wait_EndPointready(struct rpmsg_endpoint *rp_ept);
 
 #ifdef __cplusplus

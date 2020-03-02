@@ -39,6 +39,9 @@ struct rpmsg_virtio_device rvdev;
 
 static metal_phys_addr_t shm_physmap;
 
+/**
+ * @brief OpenAMP libmetal device structure
+ */
 struct metal_device shm_device = {
   .name = SHM_DEVICE_NAME,
   .num_regions = 2,
@@ -51,6 +54,12 @@ struct metal_device shm_device = {
   .irq_info = NULL
 };
 
+/**
+ * @brief Initialize OpenAMP shared memory (libmetal and resource table)
+ *
+ * @param RPMsgRole: RPMSG_REMOTE - Device is remote (slave)
+ * @retval 0 on success
+ */
 static int OPENAMP_shmem_init(int RPMsgRole)
 {
   int status = 0;
@@ -98,6 +107,11 @@ static int OPENAMP_shmem_init(int RPMsgRole)
   return 0;
 }
 
+/**
+ * @brief Initialize the openamp framework
+ *
+ * @retval 0 when success
+ */
 int OPENAMP_Init()
 {
   struct fw_rsc_vdev_vring *vring_rsc;
@@ -141,6 +155,9 @@ int OPENAMP_Init()
   return 0;
 }
 
+/**
+ * @brief Deinitialize the openamp framework
+ */
 void OPENAMP_DeInit()
 {
   rpmsg_deinit_vdev(&rvdev);
@@ -148,11 +165,27 @@ void OPENAMP_DeInit()
   metal_finish();
 }
 
+/**
+ * @brief Initialize the endpoint struct
+ *
+ * @param ept: virtio rpmsg endpoint
+ */
 void OPENAMP_init_ept(struct rpmsg_endpoint *ept)
 {
   rpmsg_init_ept(ept, "", RPMSG_ADDR_ANY, RPMSG_ADDR_ANY, NULL, NULL);
 }
 
+/**
+ * @brief Create and register the name service endpoint
+ *
+ * @param ept: virtio rpmsg endpoint
+ * @param name: virtio rpmsg name service name
+ * @param dest: message destination address. Set RPMSG_ADDR_ANY if
+ *              the host processor will decide this
+ * @param cb: virtio rpmsg endpoint callback (receive)
+ * @param unbind_cb: virtio rpmsg endpoint destroy callback
+ * @retval 0 when success
+ */
 int OPENAMP_create_endpoint(struct rpmsg_endpoint *ept, const char *name,
                             uint32_t dest, rpmsg_ept_cb cb,
                             rpmsg_ns_unbind_cb unbind_cb)
