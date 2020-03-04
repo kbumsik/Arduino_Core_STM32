@@ -100,6 +100,18 @@ When enabled, `/dev/ttyRPMSG0` is available to the Linux host. You can use it as
 
 See [OpenAMP] and [Linux RPMsg] to learn more.
 
+### Configuration
+
+To increase the performance of VirtIOSerial you can resize the related buffer configurations. There are three definitions you can use:
+
+* [`VRING_NUM_BUFFS`](/cores/arduino/stm32/OpenAMP/virtio_config.h)
+* [`RPMSG_BUFFER_SIZE`](/cores/arduino/stm32/OpenAMP/virtio_config.h)
+* [`VIRTIO_BUFFER_SIZE`](/cores/arduino/stm32/OpenAMP/virtio_buffer.h)
+
+The recommended option is to resize `VRING_NUM_BUFFS`. Be very cautious when resizing `RPMSG_BUFFER_SIZE`, which must be matched with the Linux kernel definition. Also `VIRTIO_BUFFER_SIZE` has the minimum required size depending on the other two. See their links above for further descriptions.
+
+To redefine these definitions, see how to create `build_opt.h` described in Debugging section below.
+
 ## Debugging
 
 For printf-style debugging, `core_debug()` is highly recommended instead of using Arduino Serial. In STM32MP1, `core_debug()` utilizes OpenAMP trace buffer and it has a minimal real-time impact (other than the overhead of printf) because it is not bound to the speed of a hardware IO peripheral while printing it.
