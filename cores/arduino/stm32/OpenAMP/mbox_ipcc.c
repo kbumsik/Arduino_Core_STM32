@@ -33,9 +33,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "virtio_config.h"
-#include "openamp/open_amp.h"
+#include <openamp/open_amp.h>
 #include "stm32_def.h"
 #include "openamp_conf.h"
+#include "mbox_ipcc.h"
 #include "core_debug.h"
 
 /* Private define ------------------------------------------------------------*/
@@ -103,6 +104,7 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
   switch (vring_id) {
     case VRING0_ID:
       if (msg_received_ch1 == RX_BUF_FREE) {
+        core_debug("Running vring0 (ch_1 buf free)\n");
         /* This calls rpmsg_virtio_tx_callback(), which actually does nothing. */
         rproc_virtio_notified(vdev, VRING0_ID);
         msg_received_ch1 = RX_NO_MSG;
@@ -111,6 +113,7 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
       break;
     case VRING1_ID:
       if (msg_received_ch2 == RX_NEW_MSG) {
+        core_debug("Running vring1 (ch_2 new msg)\n");
         /**
          * This calls rpmsg_virtio_rx_callback(), which calls virt_uart rx callback
          * RING_NUM_BUFFS times at maximum.
@@ -139,8 +142,8 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
   */
 int MAILBOX_Notify(void *priv, uint32_t vring_id)
 {
-  uint32_t channel;
   (void)priv;
+  uint32_t channel;
 
   /* Called after virtqueue processing: time to inform the remote */
   if (vring_id == VRING0_ID) {
@@ -170,6 +173,7 @@ int MAILBOX_Notify(void *priv, uint32_t vring_id)
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
+  (void) ChannelDir;
   msg_received_ch1 = RX_BUF_FREE;
 
   /* Inform A7 that we have received the 'buff free' msg */
@@ -180,6 +184,7 @@ void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
 void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
+  (void) ChannelDir;
   msg_received_ch2 = RX_NEW_MSG;
 
   /* Don't inform A7 here */

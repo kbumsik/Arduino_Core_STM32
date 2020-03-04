@@ -24,6 +24,7 @@
 #include "rsc_table.h"
 #include "metal/sys.h"
 #include "metal/device.h"
+#include "mbox_ipcc.h"
 /* Private define ------------------------------------------------------------*/
 
 #define SHM_DEVICE_NAME         "STM32_SHM"

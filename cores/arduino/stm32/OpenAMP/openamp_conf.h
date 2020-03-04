@@ -23,59 +23,16 @@
 
 #ifdef VIRTIOCON
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Note: Do not remove this. Removing this might not trigger compile error but
  * the configuration can be significantly different.
  */
 #include "virtio_config.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Includes ------------------------------------------------------------------*/
-/* ########################## Mailbox Interface Selection ############################## */
-/**
-  * @brief This is the list of Mailbox interface  to be used in the OpenAMP MW
-  *        Please note that not all interfaces are supported by a STM32 device
-  */
-#define MAILBOX_IPCC_IF_ENABLED
-//#define MAILBOX_HSEM_IF_ENABLED
-
-/* Includes ------------------------------------------------------------------*/
-/**
-  * @brief Include Maibox interface  header file
-  */
-
-#ifdef MAILBOX_IPCC_IF_ENABLED
-#include "mbox_ipcc.h"
-#endif /* MAILBOX_IPCC_IF_ENABLED */
-
-#ifdef MAILBOX_HSEM_IF_ENABLED
-#include "mbox_hsem.h"
-#endif /* MAILBOX_HSEM_IF_ENABLED */
-
-/* ########################## Virtual Diver Module Selection ############################## */
-/**
-  * @brief This is the list of modules to be used in the OpenAMP Virtual driver module
-  *        Please note that virtual driver are not supported on all stm32 families
-  */
-#define VIRTUAL_UART_MODULE_ENABLED
-//#define VIRTUAL_I2C_MODULE_ENABLED
-
-
-/* Includes ------------------------------------------------------------------*/
-/**
-  * @brief Include Virtual Driver module's  header file
-  */
-
-#ifdef VIRTUAL_UART_MODULE_ENABLED
 #include "virt_uart.h"
-#endif /* VIRTUAL_UART_MODULE_ENABLED */
-
-#ifdef VIRTUAL_I2C_MODULE_ENABLED
-#include "virt_i2c.h"
-#endif /* VIRTUAL_I2C_MODULE_ENABLED */
 
 /*
  * for GCC add the following content to the .ld file:

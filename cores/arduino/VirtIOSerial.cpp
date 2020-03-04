@@ -128,7 +128,6 @@ int VirtIOSerial::read(void)
 size_t VirtIOSerial::readBytes(char *buffer, size_t length)
 {
   checkMessageFromISR();
-  uint16_t prev_write_available = virtio_buffer_write_available(&_VirtIOSerialObj.ring);
   const size_t size = virtio_buffer_read(&_VirtIOSerialObj.ring, reinterpret_cast<uint8_t *>(buffer), length);
   // The ring buffer might be available enough to write after reading
   checkMessageFromISR();
