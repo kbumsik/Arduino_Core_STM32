@@ -13,7 +13,7 @@
           "options": "virtio=enabled"
         },
         {
-          "name": "STM32MP157A_DK2",
+          "name": "STM32MP157C_DK2",
           "options": "virtio=generic"
         }
       ],
