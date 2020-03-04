@@ -36,9 +36,7 @@ After Verify and Upload, you will see a message similar to the following in Ardu
 
 * Linux/macOS:
 
-    Usage: sh run_arduino.sh [start|stop|restart]
-           sh run_arduino.sh [install|uninstall]
-           sh run_arduino.sh [monitor|send-msg|send-file|minicom]
+  `/tmp/arduino_build_668148/run_arduino_Blink.sh`
 
 In this example, the user **must** upload `<Arduino build output path>/run_arduino_<sketch name>.sh` file manually. Uploading instruction is described later in the [Uploading](#Uploading) section. 
 
