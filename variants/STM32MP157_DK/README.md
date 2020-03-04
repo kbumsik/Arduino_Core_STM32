@@ -43,7 +43,8 @@ In this example, the user **must** upload `<Arduino build output path>/run_ardui
 After uploading the user can use `sh run_arduino_<sketch name>.sh start` in the console of host Linux via either SSH or Serial Console, to run the Arduino firmware.
 
 #### Note
- * `sh run_arduino_<sketch name>.sh start` is a one-shot command, the Arduino firmware only runs for the current boot. If you want to make it run after reboot, you need to use `sh run_arduino_<sketch name>.sh install` command. 
+
+* `sh run_arduino_<sketch name>.sh start` is a one-shot command, the Arduino firmware only runs for the current boot. If you want to make it run after reboot, you need to use `sh run_arduino_<sketch name>.sh install` command.
 
 `run_arduino_<sketch name>.sh` help page summary:
 
@@ -90,9 +91,9 @@ See the source code [run_arduino_gen.sh] for the full help page and the more det
 
 ## Virtual Serial
 
-With Virtual Serial, you can easily implement inter-core communication between the Linux host and Arduino coprocessor. Virtual Serial uses OpenAMP rpmsg framework. This is available as `VirtIOSerial` object and you can use it as a standard Arduino Serial object.
+With Virtual Serial, you can easily implement inter-core communication between the Linux host and Arduino coprocessor. Virtual Serial uses OpenAMP rpmsg framework. This is available as `SerialVirtIO` object and you can use it as a standard Arduino Serial object.
 
-Enable `VirtIOSerial` in Arduino IDE->Tools->Virtual serial support. You can optionally alias generic `Serial` object with `VirtIOSerial` as well.
+Enable `SerialVirtIO` in Arduino IDE->Tools->Virtual serial support. You can optionally alias generic `Serial` object with `SerialVirtIO` as well.
 
 When enabled, `/dev/ttyRPMSG0` is available to the Linux host. You can use it as a normal serial tty. `sh run_arduino_<sketch name>.sh` provides `monitor`, `minicom`, `send-msg`, `send-file` as a convenience. See above command descriptions.
 
@@ -100,7 +101,7 @@ See [OpenAMP] and [Linux RPMsg] to learn more.
 
 ### Configuration
 
-To increase the performance of VirtIOSerial you can resize the related buffer configurations. There are three definitions you can use:
+To increase the performance of SerialVirtIO you can resize the related buffer configurations. There are three definitions you can use:
 
 * [`VRING_NUM_BUFFS`](/cores/arduino/stm32/OpenAMP/virtio_config.h)
 * [`RPMSG_BUFFER_SIZE`](/cores/arduino/stm32/OpenAMP/virtio_config.h)
@@ -109,6 +110,48 @@ To increase the performance of VirtIOSerial you can resize the related buffer co
 The recommended option is to resize `VRING_NUM_BUFFS`. Be very cautious when resizing `RPMSG_BUFFER_SIZE`, which must be matched with the Linux kernel definition. Also `VIRTIO_BUFFER_SIZE` has the minimum required size depending on the other two. See their links above for further descriptions.
 
 To redefine these definitions, see how to create `build_opt.h` described in Debugging section below.
+
+### Virtual Serial Example
+
+Here is a basic echo example:
+```cpp
+int available;
+char buffer[1024];
+
+unsigned long time = 0;
+
+void setup() {
+  // You can SerialVirtIO.begin() and use SerialVirtIO later instead.
+  Serial.begin(); // You don't need to configure speed, it is ignored.
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  available = Serial.available();
+  while (available > 0) {
+    int size = min(available, Serial.availableForWrite());
+    Serial.readBytes(buffer, size);
+    Serial.write(buffer, size);
+    available -= size;
+  }
+
+  // Heartbeat. If Arduino stops the LED won't flash anymore.
+  if ((millis() - time) > 1000) {
+    time = millis();
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+  }
+}
+```
+
+Note the use of `Serial.availableForWrite()`. SerialVirtIO has [a hard restriction of the write size], so it is important to `Serial.write()` less than the value of `Serial.availableForWrite()`.
+
+After loading Arduino, You can use SerialVirtIO in two ways in this example:
+
+* Run `sh run_arduino_<sketch name>.sh minicom` and type anything in the minicom console. The console will print out what you type immediately.
+
+* Open two Linux consoles (using SSH)
+  1. In the first console, run `sh run_arduino_<sketch name>.sh monitor`
+  2. In the second console, run `sh run_arduino_<sketch name>.sh send-msg <your message>` or `sh run_arduino_<sketch name>.sh send-file <your file>`, the first console will print the content of the message.
 
 ## Debugging
 
@@ -124,15 +167,43 @@ build_opt.h (in the same directory of your Sketch)
 -DVIRTIO_LOG_BUFFER_SIZE=4086
 ```
 
-Don't forget to change any of Arduino IDE option to reflect this as in the warning section in [build_opt.h description in wiki]. This is important because if `-DCORE_DEBUG` is not configured correctly `core_debug()` silently becomes an empty function without triggering any build error.
+Don't forget to change any of Arduino IDE option to reflect this as in the warning section in [build_opt.h description in wiki]. This is important because if `-DCORE_DEBUG` is not configured correctly `core_debug()` silently becomes an empty function without triggering any build error. Don't forget to add `#include "core_debug.h"` in your code in order to use `core_debug()`.
 
-Also, need to add `#include "core_debug.h"` in your code in order to use `core_debug()`.
+Also, you must enable the Virtual Serial (described in the above section) and include `SerialVirtIO.begin();` in your Arduino sketch, because this logging feature is tightly coupled to OpenAMP virtio.
 
 You can use `sh run_arduino_<sketch name>.sh log` command or `cat /sys/kernel/debug/remoteproc/remoteproc0/trace0` command to print out the debug log in the Linux host.
 
 Note that when overflow occurs the trace buffer is re-written from the beginning, removing existing logs. Consider increasing `VIRTIO_LOG_BUFFER_SIZE` in this case, as mentioned above.
 
 See [virtio_log.h] for more information.
+
+### Debugging Example
+
+Here is a basic blink example with `core_debug()`:
+```cpp
+#include "core_debug.h"
+
+unsigned long time = 0;
+unsigned long count = 1;
+
+void setup() {
+  // You must enable SerialVirtIO to use core_debug(), even if you don't use SerialVirtIO.
+  SerialVirtIO.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+}
+
+void loop() {
+  if ((millis() - time) > 1000) {
+    time = millis();
+    core_debug("%u seconds\n", count++);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+  }
+}
+```
+
+Don't forget to add [build_opt.h] described above.
+
+After loading Arduino, you can simply `sh run_arduino_<sketch name>.sh log` to print the current `core_debug()` logs.
 
 ## Pin mapping
 
@@ -214,7 +285,7 @@ And then the Device Tree should enable TIM1 for the coprocessor, although this d
 
 * Ethernet and USB are not supported. Use them in the Linux host.
 * I2C pins on Raspberry Pi HAT header (GPIO2 and GPIO3) are not available in Linux host. This is because the Discovery board shares I2C pins on Arduino header and those on the HAT header.
-* [Early firmware loading from U-Boot stage] is not supported. Only firmware loading on Linux boot stage by systemd supported. The binary itself may be loaded by U-Boot without any problems, but there is no out-of-box tool to configure U-Boot to load the firmware using Arduino IDE yet.
+* [Early firmware loading from U-Boot stage] is not supported. Only firmware loading on Linux boot stage by systemd (aka. `sh run_arduino_<sketch name>.sh install`) supported. The binary itself may be loaded by U-Boot without any problems, but there is no out-of-box tool to configure U-Boot to load the firmware using Arduino IDE yet.
 * EEPROM library: Those devices do not have non-volatile memory. The emulation is done using RETRAM. Therefore data will be preserved *only* when VBAT is supplied (e.g. A coin battery is connected to CN3 on STM32MP157A_DK1) and the coprocessor is waken up from sleep. This implies that cold boot the board may cause data loss, even if VBAT is supplied. See [discussions on RETRAM] for more detail.
 
 
@@ -232,6 +303,7 @@ And then the Device Tree should enable TIM1 for the coprocessor, although this d
 
 [OpenAMP]: https://github.com/OpenAMP/open-amp/wiki/OpenAMP-Overview
 [Linux RPMsg]: https://wiki.st.com/stm32mpu/wiki/Linux_RPMsg_framework_overview
+[a hard restriction of the write size]: /cores/arduino/VirtIOSerial.cpp#L148
 
 [build_opt.h]: https://github.com/stm32duino/wiki/wiki/Customize-build-options-using-build_opt.h
 [build_opt.h description in wiki]: https://github.com/stm32duino/wiki/wiki/Customize-build-options-using-build_opt.h
