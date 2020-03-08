@@ -188,7 +188,6 @@ void VirtIOSerial::rxGenericCallback(VIRT_UART_HandleTypeDef *huart)
 
 void VirtIOSerial::rxCallback(VIRT_UART_HandleTypeDef *huart)
 {
-
   // Linux host must send a dummy data first to finish initialization of rpmsg
   // on the coprocessor side. This message should be discarded.
   // run_arduino_gen.sh script will send dummy data: "DUMMY".
@@ -199,7 +198,6 @@ void VirtIOSerial::rxCallback(VIRT_UART_HandleTypeDef *huart)
     _VirtIOSerialObj.first_message_discarded = true;
   }
 
-  /* copy received msg in a variable to sent it back to master processor in main infinite loop*/
   size_t size = min(huart->RxXferSize, virtio_buffer_write_available(&_VirtIOSerialObj.ring));
   while (size > 0) {
     size -= virtio_buffer_write(&_VirtIOSerialObj.ring, huart->pRxBuffPtr, size);

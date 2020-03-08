@@ -21,14 +21,14 @@
 
 /*
  * Channel direction and usage:
- * virtio_rpmsg_bus.c                                       rpmsg_virtio.c
- *  ========   <-- new msg ---=============--------<------   =======
- * ||      || rvq (rx)       || CHANNEL 1 ||    svq (tx_vq) ||     ||
- * ||  A7  ||  ------->-------=============--- buf free-->  || M4  ||
- * ||      ||                                               ||     ||
- * ||master||  <-- buf free---=============--------<------  ||slave||
- * ||      || svq (tx)       || CHANNEL 2 ||    rvq (rx_vq) ||     ||
- *  ========   ------->-------=============----new msg -->   =======
+virtio_rpmsg_bus.c                           virtqueue      vring   rpmsg_virtio.c
+ ========   <-- new msg ---=============--------<------             ==========
+||      || rvq (rx)    || IPCC CHANNEL 1 ||  svq (tx_vq) -> vring0 ||        ||
+||  A7  ||  ------->-------=============--- buf free-->            ||   M4   ||
+||      ||                                                         ||        ||
+||master||  <-- buf free---=============--------<------            || slave  ||
+||      || svq (tx)    || IPCC CHANNEL 2 ||  rvq (rx_vq) -> vring1 ||(remote)||
+ ========   ------->-------=============----new msg -->             ==========
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -158,12 +158,12 @@ int MAILBOX_Notify(void *priv, uint32_t vring_id)
 
   /* Check that the channel is free (otherwise wait until it is) */
   if (HAL_IPCC_GetChannelStatus(&hipcc, channel, IPCC_CHANNEL_DIR_TX) == IPCC_CHANNEL_STATUS_OCCUPIED) {
-    // Wait for channel to be freed
+    /* Wait for channel to be freed */
     while (HAL_IPCC_GetChannelStatus(&hipcc, channel, IPCC_CHANNEL_DIR_TX) == IPCC_CHANNEL_STATUS_OCCUPIED)
       ;
   }
 
-  /* Inform A7 (either new message, or buf free) */
+  /* Inform the host processor (either new message, or buf free) */
   HAL_IPCC_NotifyCPU(&hipcc, channel, IPCC_CHANNEL_DIR_TX);
   return 0;
 }
@@ -176,7 +176,7 @@ void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
   (void) ChannelDir;
   msg_received_ch1 = RX_BUF_FREE;
 
-  /* Inform A7 that we have received the 'buff free' msg */
+  /* Inform the host processor that we have received the 'buff free' msg */
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
 }
 
@@ -187,7 +187,7 @@ void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
   (void) ChannelDir;
   msg_received_ch2 = RX_NEW_MSG;
 
-  /* Don't inform A7 here */
+  /* Inform the host processor that we have received the msg */
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
 }
 

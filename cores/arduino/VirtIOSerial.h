@@ -34,7 +34,7 @@
 // Serial over OpenAmp
 
 // This structure is used to be able to get VirtIOSerial instance (C++ class)
-// from handler (C structure) specially for interrupt management
+// from handler (C structure) specially for rpmsg message management
 typedef struct  {
   // Those 2 first fields must remain in this order at the beginning of the structure
   void    *__this;
