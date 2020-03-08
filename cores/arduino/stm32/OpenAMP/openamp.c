@@ -35,9 +35,7 @@ static struct metal_io_region *shm_io;
 static struct metal_io_region *rsc_io;
 static struct shared_resource_table *rsc_table;
 static struct rpmsg_virtio_shm_pool shpool;
-struct rpmsg_virtio_device rvdev;
-
-
+static struct rpmsg_virtio_device rvdev;
 static metal_phys_addr_t shm_physmap;
 
 /**
