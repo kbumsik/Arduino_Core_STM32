@@ -17,8 +17,8 @@
   ******************************************************************************
   */
 
-#ifndef MBOX_IPCC_H_
-#define MBOX_IPCC_H_
+#ifndef __OPENAMP_MBOX_IPCC_H
+#define __OPENAMP_MBOX_IPCC_H
 
 #ifdef VIRTIOCON
 
@@ -35,4 +35,4 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id);
 int MAILBOX_Notify(void *priv, uint32_t id);
 
 #endif /* VIRTIOCON */
-#endif /* MBOX_IPCC_H_ */
+#endif /* __OPENAMP_MBOX_IPCC_H */

@@ -12,8 +12,8 @@
 /* This file populates resource table for BM remote
  * for use by the Linux Master */
 
-#ifndef RSC_TABLE_H_
-#define RSC_TABLE_H_
+#ifndef __OPENAMP_RSC_TABLE_H
+#define __OPENAMP_RSC_TABLE_H
 
 #ifdef VIRTIOCON
 
@@ -39,4 +39,4 @@ struct shared_resource_table {
 void resource_table_init(int RPMsgRole, void **table_ptr, int *length);
 
 #endif /* VIRTIOCON */
-#endif /* RSC_TABLE_H_ */
+#endif /* __OPENAMP_RSC_TABLE_H */

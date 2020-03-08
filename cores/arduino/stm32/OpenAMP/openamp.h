@@ -18,8 +18,8 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __openamp_H
-#define __openamp_H
+#ifndef __OPENAMP_OPENAMP_H
+#define __OPENAMP_OPENAMP_H
 
 #ifdef VIRTIOCON
 
@@ -48,6 +48,6 @@ void OPENAMP_Wait_EndPointready(struct rpmsg_endpoint *rp_ept);
 }
 #endif
 #endif /* VIRTIOCON */
-#endif /*__openamp_H */
+#endif /*__OPENAMP_OPENAMP_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -1,5 +1,5 @@
-#ifndef __VIRTIO_CONFIG_H
-#define __VIRTIO_CONFIG_H
+#ifndef __OPENAMP_VIRTIO_CONFIG_H
+#define __OPENAMP_VIRTIO_CONFIG_H
 
 // Size of buffer of each vring buffers
 #ifdef RPMSG_BUFFER_SIZE
@@ -36,4 +36,4 @@
 
 #endif
 
-#endif // __VIRTIO_CONFIG_H
+#endif // __OPENAMP_VIRTIO_CONFIG_H

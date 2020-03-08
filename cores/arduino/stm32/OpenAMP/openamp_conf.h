@@ -18,8 +18,8 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __OPENAMP_CONF__H__
-#define __OPENAMP_CONF__H__
+#ifndef __OPENAMP_OPENAMP_CONF_H
+#define __OPENAMP_OPENAMP_CONF_H
 
 #ifdef VIRTIOCON
 
@@ -78,6 +78,6 @@ extern int __OPENAMP_region_end__[];    /* defined by linker script */
 #endif
 
 #endif /* VIRTIOCON */
-#endif /* __OPENAMP_CONF__H__ */
+#endif /* __OPENAMP_OPENAMP_CONF_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

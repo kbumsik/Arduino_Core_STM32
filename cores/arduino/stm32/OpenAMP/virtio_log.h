@@ -20,8 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef __VIRTIO_LOG_H
-#define __VIRTIO_LOG_H
+#ifndef __OPENAMP_VIRTIO_LOG_H
+#define __OPENAMP_VIRTIO_LOG_H
 
 #include <stdint.h>
 
@@ -46,4 +46,4 @@ void virtio_log(uint8_t *data, uint32_t size);
 }
 #endif
 
-#endif // __VIRTIO_LOG_H
+#endif // __OPENAMP_VIRTIO_LOG_H

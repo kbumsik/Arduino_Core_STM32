@@ -21,8 +21,8 @@
  * THE SOFTWARE.
  */
 
-#ifndef __VIRTIO_BUFFER_H
-#define __VIRTIO_BUFFER_H
+#ifndef __OPENAMP_VIRTIO_BUFFER_H
+#define __OPENAMP_VIRTIO_BUFFER_H
 
 #include <stdint.h>
 
@@ -63,4 +63,4 @@ uint16_t virtio_buffer_write(virtio_buffer_t *ring, uint8_t *src, uint16_t size)
 }
 #endif
 
-#endif // __VIRTIO_VIRTIO_BUFFER_H
+#endif // __OPENAMP_VIRTIO_BUFFER_H
