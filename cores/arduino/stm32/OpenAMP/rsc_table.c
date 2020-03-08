@@ -25,11 +25,11 @@
 #include "rsc_table.h"
 #include "openamp/open_amp.h"
 
-#define RPMSG_IPU_C0_FEATURES       1
-#define VRING_COUNT             2
+#define RPMSG_IPU_C0_FEATURES 1
+#define VRING_COUNT           2
 
 /* VirtIO rpmsg device id */
-#define VIRTIO_ID_RPMSG_            7
+#define VIRTIO_ID_RPMSG       7
 
 #if defined (VIRTIO_LOG)
 extern char virtio_log_buffer[];
@@ -50,7 +50,7 @@ const struct shared_resource_table __attribute__((__section__(".resource_table")
   /* Virtio device entry */
   .vdev = {
     .type = RSC_VDEV,
-    .id = VIRTIO_ID_RPMSG_,
+    .id = VIRTIO_ID_RPMSG,
     .notifyid = 0,
     .dfeatures = RPMSG_IPU_C0_FEATURES,
     .gfeatures = 0,
