@@ -31,7 +31,7 @@
 #include "virtio_buffer.h"
 
 //================================================================================
-// Serial over OpenAmp
+// Serial over OpenAMP
 
 // This structure is used to be able to get VirtIOSerial instance (C++ class)
 // from handler (C structure) specially for rpmsg message management

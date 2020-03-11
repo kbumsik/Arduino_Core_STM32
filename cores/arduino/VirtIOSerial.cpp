@@ -71,13 +71,13 @@ void VirtIOSerial::begin(void)
 
 void VirtIOSerial::begin(uint32_t /* baud_count */)
 {
-  // uart config is ignored in OpenAmp
+  // uart config is ignored in OpenAMP
   begin();
 }
 
 void VirtIOSerial::begin(uint32_t /* baud_count */, uint8_t /* config */)
 {
-  // uart config is ignored in OpenAmp
+  // uart config is ignored in OpenAMP
   begin();
 }
 
