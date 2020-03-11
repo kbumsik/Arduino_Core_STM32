@@ -119,7 +119,7 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
          * RING_NUM_BUFFS times at maximum.
          */
         rproc_virtio_notified(vdev, VRING1_ID);
-        msg_received_ch2 = RX_NO_MSG;
+        msg_received_ch2 = MBOX_NO_MSG;
         ret = 0;
       }
       break;
@@ -171,7 +171,7 @@ void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
   (void) ChannelDir;
-  msg_received_ch1 = RX_BUF_FREE;
+  msg_received_ch1 = MBOX_BUF_FREE;
 
   /* Inform the host processor that we have received the 'buff free' msg */
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
@@ -182,7 +182,7 @@ void IPCC_channel2_callback(IPCC_HandleTypeDef *hipcc,
                             uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir)
 {
   (void) ChannelDir;
-  msg_received_ch2 = RX_NEW_MSG;
+  msg_received_ch2 = MBOX_NEW_MSG;
 
   /* Inform the host processor that we have received the msg */
   HAL_IPCC_NotifyCPU(hipcc, ChannelIndex, IPCC_CHANNEL_DIR_RX);
