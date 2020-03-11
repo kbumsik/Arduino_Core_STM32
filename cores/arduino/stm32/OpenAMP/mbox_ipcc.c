@@ -46,15 +46,15 @@ virtio_rpmsg_bus.c                           virtqueue      vring   rpmsg_virtio
 #define IPCC_CPU_M4         REMOTE_CPU_ID
 
 typedef enum {
-  RX_NO_MSG = 0,
-  RX_NEW_MSG = 1,
-  RX_BUF_FREE = 2
-} rx_status_t;
+  MBOX_NO_MSG = 0,
+  MBOX_NEW_MSG = 1,
+  MBOX_BUF_FREE = 2
+} mbox_status_t;
 
 /* Private variables ---------------------------------------------------------*/
 IPCC_HandleTypeDef hipcc;
-rx_status_t msg_received_ch1 = RX_NO_MSG;
-rx_status_t msg_received_ch2 = RX_NO_MSG;
+mbox_status_t msg_received_ch1 = MBOX_NO_MSG;
+mbox_status_t msg_received_ch2 = MBOX_NO_MSG;
 
 /* Private function prototypes -----------------------------------------------*/
 void IPCC_channel1_callback(IPCC_HandleTypeDef *hipcc, uint32_t ChannelIndex, IPCC_CHANNELDirTypeDef ChannelDir);
@@ -103,16 +103,16 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
 
   switch (vring_id) {
     case VRING0_ID:
-      if (msg_received_ch1 == RX_BUF_FREE) {
+      if (msg_received_ch1 == MBOX_BUF_FREE) {
         core_debug("Running vring0 (ch_1 buf free)\n");
         /* This calls rpmsg_virtio_tx_callback(), which actually does nothing. */
         rproc_virtio_notified(vdev, VRING0_ID);
-        msg_received_ch1 = RX_NO_MSG;
+        msg_received_ch1 = MBOX_NO_MSG;
         ret = 0;
       }
       break;
     case VRING1_ID:
-      if (msg_received_ch2 == RX_NEW_MSG) {
+      if (msg_received_ch2 == MBOX_NEW_MSG) {
         core_debug("Running vring1 (ch_2 new msg)\n");
         /**
          * This calls rpmsg_virtio_rx_callback(), which calls virt_uart rx callback
