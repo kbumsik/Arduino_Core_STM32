@@ -120,9 +120,6 @@ int MAILBOX_Poll(struct virtio_device *vdev, uint32_t vring_id)
          */
         rproc_virtio_notified(vdev, VRING1_ID);
         msg_received_ch2 = RX_NO_MSG;
-
-        /* The OpenAMP framework does not notify for free buf: do it here */
-        rproc_virtio_notified(NULL, VRING1_ID);
         ret = 0;
       }
       break;
