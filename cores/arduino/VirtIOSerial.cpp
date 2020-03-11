@@ -83,6 +83,7 @@ void VirtIOSerial::begin(uint32_t /* baud_count */, uint8_t /* config */)
 
 void VirtIOSerial::end()
 {
+  VIRT_UART_DeInit(&_VirtIOSerialObj.handle);
   OPENAMP_DeInit();
   virtio_buffer_init(&_VirtIOSerialObj.ring);
   _VirtIOSerialObj.initialized = false;
