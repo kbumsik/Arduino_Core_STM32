@@ -1,16 +1,19 @@
 #ifndef __OPENAMP_VIRTIO_CONFIG_H
 #define __OPENAMP_VIRTIO_CONFIG_H
 
-// Size of buffer of each vring buffers
-#ifdef RPMSG_BUFFER_SIZE
-#warning "RPMSG_BUFFER_SIZE should be aligned with the kernel definition."
-#warning "Reference: https://elixir.bootlin.com/linux/v5.5.2/source/drivers/rpmsg/virtio_rpmsg_bus.c#L137"
-#else
+#ifndef RPMSG_BUFFER_SIZE
+/**
+ * @brief Size of buffer of each vring buffers
+ * @note  If the host processor is Linux, RPMSG_BUFFER_SIZE must be aligned
+ *        with the kernel definition.
+ *        Reference: https://elixir.bootlin.com/linux/v5.5.2/source/drivers/rpmsg/virtio_rpmsg_bus.c#L137
+ */
 #define RPMSG_BUFFER_SIZE (512)
 #endif
 
-// Size of the vqueue message in the buffer
+/** Size of header of a vqueue message */
 #define RPMSG_VRING_HEADER_SIZE (16)
+/** Available size of payload of a vqueue message */
 #define RPMSG_VRING_PAYLOAD_SIZE (RPMSG_BUFFER_SIZE - RPMSG_VRING_HEADER_SIZE)
 
 /**
